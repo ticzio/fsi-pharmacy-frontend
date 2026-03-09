@@ -1,0 +1,30 @@
+/* Forms Global Styles */
+
+.card {
+  border-radius: 1.5rem;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.form-label {
+  margin-bottom: 0.25rem; /* mb-1 */
+  text-indent: 0.7rem; /* .text-indent pattern */
+}
+
+/* Textarea specific */
+textarea.form-control {
+  resize: none;
+}
+
+/* Form Section Title */
+.form-section-title {
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* Container adjustments if needed */
+.form-container {
+  position: relative;
+  margin-top: 1.5rem;
+  margin-bottom: 3rem;
+}

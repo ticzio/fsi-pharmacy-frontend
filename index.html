@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/logo_fsi.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/logo_fsi.png" />
+  <link rel="apple-touch-icon" href="/logo_fsi.png" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100..900&display=swap" rel="stylesheet" />
+  <title>FSI (BackOffice)</title>
+</head>
+
+<body>
+  <!-- Loader inicial mientras se inicializa la API -->
+  <div id="app-loader" style="
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #103560 0%, #1a4a7a 50%, #103560 100%);
+    font-family: 'Lexend Deca', sans-serif;
+  ">
+    <img src="/changan-icon.png" alt="Changan"
+      style="width: 80px; height: 80px; margin-bottom: 24px; animation: pulse 1.5s ease-in-out infinite;" />
+    <div style="
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    "></div>
+    <p style="color: #fff; margin-top: 20px; font-size: 1rem; opacity: 0.9;">Cargando dashboard...</p>
+  </div>
+  <style>
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.7;
+        transform: scale(0.95);
+      }
+    }
+  </style>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
