@@ -127,16 +127,16 @@ const store = createStore({
           .then((response) => {
             if (response.data.code === 200) {
               const userData = response.data.data
-              setCookie('fsi_admin_token', userData.auth.token)
-              setCookie('fsi_admin_full_name', userData.full_name)
-              setCookie('fsi_admin_id_user', userData.id)
-              setCookie('fsi_admin_code_user', userData.code)
+              setCookie('fsi_pharmacy_token', userData.token)
+              setCookie('fsi_pharmacy_full_name', userData.full_name)
+              setCookie('fsi_pharmacy_id_user', userData.id)
+              setCookie('fsi_pharmacy_code_user', userData.code)
               const id_role_hashing = btoa(userData.id_type_rol_user.toString())
-              setCookie('fsi_admin_id_role', id_role_hashing)
+              setCookie('fsi_pharmacy_id_role', id_role_hashing)
 
-              //setCookie('fsi_admin_id_admin', userData.id_admin)
+              //setCookie('fsi_pharmacy_id_admin', userData.id_admin)
               if (userData.url_image) {
-                setCookie('fsi_admin_url_image', userData.url_image)
+                setCookie('fsi_pharmacy_url_image', userData.url_image)
               }
               commit('SET_USER', userData)
               resetAuthRole()
@@ -155,13 +155,13 @@ const store = createStore({
       const { resetAuthRole } = useAuth()
       const { removeCookie } = useCookies()
 
-      removeCookie('fsi_admin_token')
-      removeCookie('fsi_admin_full_name')
-      removeCookie('fsi_admin_id_role')
-      removeCookie('fsi_admin_id_admin')
-      removeCookie('fsi_admin_url_image')
-      removeCookie('fsi_admin_code_user')
-      removeCookie('fsi_admin_id_user')
+      removeCookie('fsi_pharmacy_token')
+      removeCookie('fsi_pharmacy_full_name')
+      removeCookie('fsi_pharmacy_id_role')
+      removeCookie('fsi_pharmacy_id_admin')
+      removeCookie('fsi_pharmacy_url_image')
+      removeCookie('fsi_pharmacy_code_user')
+      removeCookie('fsi_pharmacy_id_user')
 
       resetAuthRole()
 

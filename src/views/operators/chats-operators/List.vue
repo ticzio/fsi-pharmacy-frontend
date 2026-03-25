@@ -38,7 +38,7 @@ const { getCookie } = useCookies()
 const loading = ref(true)
 const operatorCode = ref<string | null>(null)
 const pharmacyCode = ref<string | null>(null)
-const currentAdminCode = ref<string | null>(getCookie('fsi_admin_code_user') || null)
+const currentAdminCode = ref<string | null>(getCookie('fsi_pharmacy_code_user') || null)
 
 onMounted(async () => {
   const operatorId = route.params.id as string

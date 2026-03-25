@@ -51,7 +51,7 @@ const filteredTabRoutes = ref<typeof allTabRoutes>([])
 // 2. La lógica asíncrona se mueve a una función `async` estándar.
 const determineVisibleTabs = async () => {
   const { getCookie } = useCookies()
-  const hashedRole = getCookie('fsi_admin_id_role')
+  const hashedRole = getCookie('fsi_pharmacy_id_role')
   if (!hashedRole) {
     filteredTabRoutes.value = []
     return

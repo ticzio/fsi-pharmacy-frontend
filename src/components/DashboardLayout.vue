@@ -16,9 +16,9 @@ const router = useRouter()
 const swal = useSwal()
 
 const { getCookie } = useCookies()
-const CookiesFullName = getCookie('fsi_admin_full_name') || 'Usuario'
-const CookiesEmail = getCookie('fsi_admin_email') || 'Administrador'
-const CookiesUrlImage = getCookie('fsi_admin_url_image')
+const CookiesFullName = getCookie('fsi_pharmacy_full_name') || 'Usuario'
+const CookiesEmail = getCookie('fsi_pharmacy_email') || 'Administrador'
+const CookiesUrlImage = getCookie('fsi_pharmacy_url_image')
 
 // Helper para verificar si un item está activo
 const isItemActive = (item: MenuItem): boolean => {

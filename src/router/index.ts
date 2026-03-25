@@ -4,13 +4,7 @@ import { getRoleIdFromCookie } from '@/composables/useAccessControl'
 import { roleHasAllPermissions } from '@/const/rolePermissions'
 
 import dashboardRoutes from './routes/dashboard'
-import pharmacyRoutes from './routes/pharmacy'
 import couponsRoutes from './routes/exchanges'
-import newsRoutes from './routes/news'
-import notificationsRoutes from './routes/notifications'
-import clientRoutes from './routes/client'
-import operatorsRoutes from './routes/operators'
-import administratorsRoutes from './routes/administrators'
 import settingsRoutes from './routes/settings'
 
 const router = createRouter({
@@ -27,14 +21,7 @@ const router = createRouter({
       meta: { requiresGuest: true },
     },
     ...dashboardRoutes,
-    ...pharmacyRoutes,
     ...couponsRoutes,
-    ...newsRoutes,
-    ...notificationsRoutes,
-    ...clientRoutes,
-    ...operatorsRoutes,
-    ...administratorsRoutes,
-    ...settingsRoutes,
     // Catch-all 404 route (must be last)
     {
       path: '/:pathMatch(.*)*',

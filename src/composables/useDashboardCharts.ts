@@ -2,59 +2,78 @@ import { reactive } from 'vue'
 import type { ApexOptions } from 'apexcharts'
 
 export function useDashboardCharts() {
-  const chart1Series = reactive([
+  const chartSeries = reactive([
     {
-      name: 'Descuentos',
-      data: [31, 40, 28, 51, 42, 109, 100],
+      name: 'Nivel 1',
+      data: [90, 20, 70, 28, 51, 20, 60],
     },
     {
-      name: 'Beneficios',
-      data: [11, 32, 45, 32, 34, 52, 41],
+      name: 'nivel 2',
+      data: [45, 12, 110, 80, 40, 105, 80],
     },
   ])
 
-  const chart1Options = reactive<ApexOptions>({
+  const chartOptions = reactive<ApexOptions>({
     chart: {
-      type: 'area',
-      height: 350,
+      type: 'line',
+      height: 280,
       toolbar: { show: false },
+      zoom: { enabled: false }
     },
     colors: ['#1e3888', '#00d500'],
     dataLabels: { enabled: false },
-    stroke: { curve: 'smooth' },
+    stroke: { 
+      curve: 'smooth',
+      width: 3
+    },
     xaxis: {
-      categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
+      categories: ['FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL'],
+      labels: {
+        style: {
+          colors: '#888',
+          fontSize: '11px',
+          fontWeight: 600
+        }
+      },
+      axisBorder: {
+        show: false,
+      },
+      axisTicks: {
+        show: false,
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: '#888',
+          fontSize: '11px',
+        }
+      }
+    },
+    grid: {
+      borderColor: '#f1f1f1',
+      strokeDashArray: 0,
+      xaxis: {
+        lines: {
+          show: false
+        }
+      },
+      yaxis: {
+        lines: {
+          show: true
+        }
+      }
+    },
+    legend: {
+      show: false
     },
     tooltip: {
-      x: { format: 'dd/MM/yy HH:mm' },
-    },
-  })
-
-  const chart2Series = reactive([
-    {
-      name: 'Clientes registrados',
-      data: [300, 400, 350, 500, 490, 600, 700],
-    },
-  ])
-
-  const chart2Options = reactive<ApexOptions>({
-    chart: {
-      type: 'line',
-      height: 350,
-      toolbar: { show: false },
-    },
-    colors: ['#4a148c'],
-    dataLabels: { enabled: false },
-    stroke: { curve: 'smooth' },
-    xaxis: {
-      categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
+      x: { show: false },
     },
   })
 
   return {
-    chart1Series,
-    chart1Options,
-    chart2Series,
-    chart2Options,
+    chartSeries,
+    chartOptions
   }
 }

@@ -30,7 +30,7 @@ const handleLogin = async (credentialsPayload: any) => {
   loading.value = true
   try {
     const response = await store.dispatch('login', {
-      url: '/auth/login',
+      url: '/auth/login/pharmacy',
       credentials: { email, password },
     })
 

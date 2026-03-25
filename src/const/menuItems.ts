@@ -13,14 +13,7 @@ export interface MenuItem {
 
 export const MENU_ITEMS: MenuItem[] = [
   { label: 'Inicio', to: '/dashboard', matchPath: '/dashboard' },
-  { label: 'Farmacia', to: '/pharmacy', matchPath: '/pharmacy' },
   { label: 'Canjes', to: '/exchanges', matchPath: '/exchanges' },
-  { label: 'Noticias', to: '/news', matchPath: '/news' },
-  { label: 'Notificaciones', to: '/notifications', matchPath: '/notifications' },
-  { label: 'Clientes', to: '/clients', matchPath: '/clients' },
-  { label: 'Operadores', to: '/operators', matchPath: '/operators' },
-  { label: 'Administradores', to: '/administrators', matchPath: '/administrators' },
-  { label: 'Configuración', to: '/settings', matchPath: '/settings' },
 ]
 
 /**

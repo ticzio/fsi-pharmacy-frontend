@@ -40,7 +40,7 @@ const filteredTabRoutes = ref<typeof allTabRoutes>([])
 
 const determineVisibleTabs = async () => {
   const { getCookie } = useCookies()
-  const hashedRole = getCookie('fsi_admin_id_role')
+  const hashedRole = getCookie('fsi_pharmacy_id_role')
   if (!hashedRole) {
     filteredTabRoutes.value = []
     return

@@ -49,7 +49,7 @@ const handleLogin = () => {
           class="mobile-logo"
         />
       </div>
-      <h2 class="text-center mb-3 form-title">Bienvenido Al Panel<br />Administrativo</h2>
+      <h2 class="text-center mb-3 form-title">Bienvenido Al Panel de<br />Farmacias</h2>
       <p class="text-center mb-4 pb-3 form-subtitle">Ingresa tus datos para iniciar sesión</p>
       <form @submit.prevent="handleLogin">
         <BaseInput

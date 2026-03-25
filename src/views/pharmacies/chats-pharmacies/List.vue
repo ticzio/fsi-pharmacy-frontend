@@ -46,7 +46,7 @@ onMounted(async () => {
     isLoading.value = true
 
     // Buscar al usuario por el ID de la cookie
-    const userId = getCookie('fsi_admin_id_user')
+    const userId = getCookie('fsi_pharmacy_id_user')
     if (userId) {
       await getUser(userId)
     }

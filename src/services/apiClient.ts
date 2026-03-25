@@ -41,7 +41,7 @@ apiClient.interceptors.request.use(
       config.headers = {} as typeof config.headers
     }
     const { getCookie } = useCookies()
-    const token = getCookie('fsi_admin_token')
+    const token = getCookie('fsi_pharmacy_token')
     if (token) {
       config.headers['Authorization'] = 'Bearer ' + token
     }
