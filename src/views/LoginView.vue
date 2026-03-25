@@ -8,7 +8,6 @@ import { ERROR } from '@/const/errorConst'
 import { getEnvironmentAlert } from '@/services/initApi'
 import packageJson from '../../package.json'
 import { normalizeEmail } from '@/utils/funcEmails'
-import { getPasswordErrors } from '@/utils/funcPassword'
 import LoginForm from '@/components/Login/LoginForm.vue'
 
 const APP_VERSION = packageJson.version
@@ -31,13 +30,16 @@ const handleLogin = async (credentialsPayload: any) => {
   loading.value = true
   try {
     const response = await store.dispatch('login', {
-      url: '/auth/admin/login',
+      url: '/auth/login',
       credentials: { email, password },
     })
 
-    if (response.code === 200) {
-      swal.showSuccess('Inicio de sesión exitoso')
-      router.push('/dashboard')
+    if (response.code == 200) {
+      await swal.showSuccess('Inicio de sesión exitoso')
+      console.log('Redirigiendo a dashboard...')
+      router.push('/dashboard').catch((err) => {
+        console.error('Error en la navegación:', err)
+      })
     }
   } catch (error: any) {
     console.error('Error al iniciar sesión:', error)

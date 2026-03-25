@@ -8,6 +8,7 @@ import { MENU_ITEMS, isMenuItemActive } from '@/const/menuItems'
 import type { MenuItem } from '@/const/menuItems'
 import { useCookies } from '@/composables/useCookies'
 import defaultAvatar from '@/assets/images/default-profile.png'
+import fsiLogo from '@/assets/images/login/login_logo_FSI.png'
 
 const store = useStore()
 const route = useRoute()
@@ -15,9 +16,9 @@ const router = useRouter()
 const swal = useSwal()
 
 const { getCookie } = useCookies()
-const CookiesFullName = getCookie('changan_admin_full_name') || 'Usuario'
-const CookiesEmail = getCookie('changan_admin_email') || 'Administrador'
-const CookiesUrlImage = getCookie('changan_admin_url_image')
+const CookiesFullName = getCookie('fsi_admin_full_name') || 'Usuario'
+const CookiesEmail = getCookie('fsi_admin_email') || 'Administrador'
+const CookiesUrlImage = getCookie('fsi_admin_url_image')
 
 // Helper para verificar si un item está activo
 const isItemActive = (item: MenuItem): boolean => {
@@ -152,6 +153,7 @@ const handleLogout = async () => {
           >
             <i class="bi-list fs-1"></i>
           </button>
+          <img :src="fsiLogo" alt="Logo FSI" class="mobile-header-logo" />
           <button
             class="btn btn-link text-decoration-none text-danger d-flex align-items-center"
             @click="handleLogout"
@@ -346,6 +348,12 @@ const handleLogout = async () => {
 }
 .logout-btn:hover {
   color: #ef4444 !important;
+}
+
+.mobile-header-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 @media (max-width: 1024px) {

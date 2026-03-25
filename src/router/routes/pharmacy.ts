@@ -21,7 +21,7 @@ export default [
       {
         path: 'detail-pharmacies',
         name: 'Detalles de la Farmacia',
-        component: () => import('../../views/pharmacies/detail-pharmacies/List.vue'),
+        component: () => import('../../views/pharmacies/detail-pharmacies/Edit.vue'),
         meta: { requiresAuth: true },
       },
       {

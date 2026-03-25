@@ -111,6 +111,10 @@ const displayContent = computed(() => {
   }
   return formData.value.content
 })
+
+defineExpose({
+  handleSubmit,
+})
 </script>
 
 <template>
@@ -266,23 +270,6 @@ const displayContent = computed(() => {
       </div>
     </div>
 
-    <!-- Botones de Acción -->
-    <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
-      <button
-        type="button"
-        class="btn btn-outline-secondary px-4 rounded-3 shadow-sm fw-medium"
-        @click="$emit('cancel')"
-      >
-        Cancelar
-      </button>
-      <button
-        type="submit"
-        class="btn btn-primary px-4 rounded-3 text-white fw-bold shadow-sm d-flex align-items-center"
-      >
-        <i class="bi bi-save me-2"></i>
-        {{ isEditing ? 'Guardar Cambios' : 'Crear Noticia' }}
-      </button>
-    </div>
   </form>
 </template>
 

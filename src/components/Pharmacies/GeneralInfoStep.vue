@@ -26,7 +26,7 @@ const handleCoordinates = (coords: { latitude: string; longitude: string } | nul
     <div class="row g-3 mt-2">
       <!-- Foto / Logo -->
       <div class="col-12 col-md-4 col-lg-3">
-        <label class="form-label fw-bold mb-1">Logotipo de la Farmacia</label>
+        <label class="form-label fw-bold mb-1">Logotipo de la Farmacia *</label>
         <ImageUploader
           v-model="form.url_image"
           :round="false"
@@ -43,7 +43,7 @@ const handleCoordinates = (coords: { latitude: string; longitude: string } | nul
               id="name"
               v-model="form.name"
               label="Nombre de la Farmacia *"
-              placeholder="Ej. Farmatodo Los Leones"
+              placeholder="Ej. Farmacia San Rafael"
               :rules="[(v) => !!v || 'El nombre es obligatorio']"
             />
           </div>
@@ -51,7 +51,7 @@ const handleCoordinates = (coords: { latitude: string; longitude: string } | nul
             <BaseInput
               id="phone"
               v-model="form.phone"
-              label="Teléfono Principal"
+              label="Teléfono Principal *"
               placeholder="Ej. 04141234567"
             />
           </div>
@@ -59,7 +59,7 @@ const handleCoordinates = (coords: { latitude: string; longitude: string } | nul
             <MultiselectCustom
               v-model="form.id_type_city"
               :options="cityOptions"
-              label="Ciudad"
+              label="Ciudad *"
               placeholder="Selecciona la ciudad de operación"
               labelKey="name"
               trackBy="id"
@@ -73,7 +73,7 @@ const handleCoordinates = (coords: { latitude: string; longitude: string } | nul
             <BaseTextarea
               id="description"
               v-model="form.description"
-              label="Descripción"
+              label="Descripción *"
               rows="3"
               resize="none"
               placeholder="Breve descripción de los servicios u orientaciones principales de la farmacia..."
@@ -83,7 +83,7 @@ const handleCoordinates = (coords: { latitude: string; longitude: string } | nul
             <BaseTextarea
               id="ubication"
               v-model="form.ubication"
-              label="Dirección Física Completa"
+              label="Dirección Física Completa *"
               rows="3"
               resize="none"
               placeholder="Ej. Av. Los Leones, cruce con calle 1, Edificio Plaza, Local 3."
@@ -92,7 +92,7 @@ const handleCoordinates = (coords: { latitude: string; longitude: string } | nul
           <div class="col-12 mt-0">
             <CustomLocation
               v-model="form.url_google_map"
-              label="Enlace de Google Maps"
+              label="Enlace de Google Maps *"
               placeholder="Pega el link corto o largo de la ubicación"
               @coordinates-extracted="handleCoordinates"
             />

@@ -10,6 +10,7 @@ import { useStore } from 'vuex'
 import { useLogger } from '@/composables/useLogger'
 import { useCookies } from '@/composables/useCookies'
 import { decodeRole } from '@/composables/useAccessControl'
+import { usePharmacy } from '@/composables/Models/usePharmacy'
 
 import { TITLE_SECTION_COMPONENT } from '@/const/tableConst'
 import { URLS } from '@/const/api'
@@ -19,7 +20,7 @@ const router = useRouter()
 const store = useStore()
 const logger = useLogger()
 
-const isLoading = ref(false)
+
 const localTitle = ref('Titulo por defecto')
 
 const title = computed(() => localTitle.value || store.getters['utils/isItem'] || '')
@@ -51,7 +52,7 @@ const filteredTabRoutes = ref<typeof allTabRoutes>([])
 // 2. La lógica asíncrona se mueve a una función `async` estándar.
 const determineVisibleTabs = async () => {
   const { getCookie } = useCookies()
-  const hashedRole = getCookie('changan_admin_id_role')
+  const hashedRole = getCookie('fsi_admin_id_role')
   if (!hashedRole) {
     filteredTabRoutes.value = []
     return
@@ -119,7 +120,7 @@ const startLoadingTimeout = () => {
   loadingTimeout = setTimeout(() => {
     if (isLoading.value) {
       console.warn('Loading timeout alcanzado, cargando datos directamente...')
-      //loadPharmacyData()
+      loadPharmacyData()
     }
   }, 3000) // 3 segundos de espera máxima
 }
@@ -131,34 +132,20 @@ const clearLoadingTimeout = () => {
   }
 }
 
-// Cargar datos de la farmacia directamente si es necesario (ej: recarga de página)
-/*
+// Cargar datos de la farmacia usando el composable
+const { getPharmacy, loading: isLoading } = usePharmacy()
+
 const loadPharmacyData = async () => {
   try {
-    const response = await store.dispatch('getData', {
-      url: `${URLS.pharmacy?.prefix || 'pharmacy'}/${route.params.id_pharmacy}`,
-    })
-    if (response.code === 200) {
-      const data = response.data
-      logger.logRequest(
-        (URLS.pharmacy?.prefix || 'pharmacy') + '/' + route.params.id_pharmacy,
-        {},
-        data,
-      )
+    const data = await getPharmacy(route.params.id_pharmacy as string)
+    if (data) {
       localTitle.value = data.name || data.trade_name || ''
       store.dispatch('utils/setIsItem', localTitle.value)
     }
   } catch (error) {
-    logger.logRequest(
-      (URLS.pharmacy?.prefix || 'pharmacy') + '/' + route.params.id_pharmacy,
-      {},
-      error,
-    )
-  } finally {
-    isLoading.value = false
+    console.error('Error fetching pharmacy for Orchestrator:', error)
   }
 }
-*/
 
 watch(
   () => activeTab.value,
@@ -186,7 +173,7 @@ onMounted(async () => {
     startLoadingTimeout()
   } else {
     // Si no está cargando, cargamos los datos inmediatamente
-    //loadPharmacyData()
+    loadPharmacyData()
   }
 })
 

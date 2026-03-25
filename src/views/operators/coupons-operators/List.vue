@@ -3,6 +3,7 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import CustomTable from '@/components/common/CustomTable.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
 
 //Composables
 import { useStore } from 'vuex'
@@ -111,7 +112,11 @@ onMounted(() => {
         :change-page="handleTablePagination"
         @change-page="handleTablePagination"
         @action-click="handleTableAction"
-      />
+      >
+        <template #cell(active)="{ value }">
+          <StatusBadge :value="value" />
+        </template>
+      </CustomTable>
     </div>
   </div>
 </template>

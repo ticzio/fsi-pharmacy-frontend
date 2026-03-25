@@ -6,17 +6,19 @@ import CustomTable from '@/components/common/CustomTable.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
 import RedirectButton from '@/components/common/RedirectButton.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
 import Modal from '@/components/common/Modal.vue'
 import NotificationForm from '@/components/Notifications/NotificationForm.vue'
 import NotificationDetails from '@/components/Notifications/NotificationDetails.vue'
 
 //Composables
+import { useNotification } from '@/composables/Models/useNotification'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { useSwalToast } from '@/composables/useSwalToast'
 import { useTableActions } from '@/composables/useTableActions'
 
-import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_PAGINATION } from '@/const/tableConst'
+import { TITLE_SECTION_COMPONENT, TABLE_HEADERS } from '@/const/tableConst'
 import { BUTTONS_TOOLTIPS } from '@/const/buttonConst'
 
 interface Item {
@@ -39,37 +41,25 @@ const store = useStore()
 const isMobile = computed(() => store.getters.isMobile)
 const { getDefaultActions } = useTableActions()
 
-const loading = ref(false)
-const items = ref<Item[]>([
-  {
-    id: 1,
-    title: 'Notificación de ejemplo 1',
-    description: 'Descripción de la notificación 1',
-    type_notification: 'email',
-    active: true,
-  },
-  {
-    id: 2,
-    title: 'Notificación de ejemplo 2',
-    description: 'Descripción de la notificación 2',
-    type_notification: 'email',
-    active: false,
-  },
-])
+const {
+  loading,
+  notifications: items,
+  pagination,
+  paginationKey,
+  getDataNotifications,
+  saveNotification,
+  changeStatusNotification,
+} = useNotification()
+
 const search = ref('')
 
-const paginationKey = 'notifications-list'
-const pagination = reactive({
-  currentPage: TABLE_PAGINATION.currentPage,
-  totalPages: TABLE_PAGINATION.totalPages,
-  limit: TABLE_PAGINATION.limit,
-})
-
-const handleTableAction = ({ actionName, item }: { actionName: string; item: any }) => {
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: any }) => {
   if (actionName === 'edit') {
     modalMode.value = 'view'
     selectedNotification.value = item
     newNotificationModalRef.value?.openModal()
+  } else if (actionName === 'active' || actionName === 'deactive') {
+    await changeStatusNotification(item)
   }
 }
 
@@ -77,12 +67,13 @@ const getTableActions = async (item: any) => {
   return getDefaultActions(item)
 }
 
-const handleTablePagination = (page: number) => {
+const handleTablePagination = async (page: number) => {
   pagination.currentPage = page
   store.dispatch('pagination/updatePagination', {
     key: paginationKey,
     currentPage: page,
   })
+  await getDataNotifications(page, search.value)
 }
 
 const goToNew = () => {
@@ -90,19 +81,26 @@ const goToNew = () => {
   newNotificationModalRef.value?.openModal()
 }
 
-const fetchData = () => {
-  // TODO: Lógica para hacer la petición GET
-  search.value = ''
+const fetchData = async () => {
+  pagination.currentPage = 1
+  store.dispatch('pagination/updatePagination', {
+    key: paginationKey,
+    currentPage: 1,
+  })
+  await getDataNotifications(1, search.value)
 }
 
-const handleNotificationSubmit = () => {
-  fetchData()
-  newNotificationModalRef.value?.closeModal()
+const handleNotificationSubmit = async (formData: any) => {
+  const success = await saveNotification(formData, false)
+  if (success) {
+    newNotificationModalRef.value?.closeModal()
+  }
 }
 
-onMounted(() => {
+onMounted(async () => {
   const savedPageGetter = store.getters['pagination/getPage']
-  pagination.currentPage = savedPageGetter(paginationKey)
+  pagination.currentPage = savedPageGetter(paginationKey) || 1
+  await getDataNotifications(pagination.currentPage, search.value)
 })
 </script>
 
@@ -155,7 +153,11 @@ onMounted(() => {
           :change-page="handleTablePagination"
           @change-page="handleTablePagination"
           @action-click="handleTableAction"
-        />
+        >
+          <template #cell(active)="{ value }">
+            <StatusBadge :value="value" />
+          </template>
+        </CustomTable>
       </div>
       <Modal
         ref="newNotificationModalRef"

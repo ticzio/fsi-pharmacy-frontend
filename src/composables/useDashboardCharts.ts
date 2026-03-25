@@ -1,120 +1,54 @@
-import { ref } from 'vue'
+import { reactive } from 'vue'
+import type { ApexOptions } from 'apexcharts'
 
 export function useDashboardCharts() {
-  // ─── Chart 1: Cupones canjeados (multi-line, 6 meses) ─────────────────────
-  const chart1Series = ref([
+  const chart1Series = reactive([
     {
       name: 'Descuentos',
-      data: [90, 25, 120, 50, 115, 50],
+      data: [31, 40, 28, 51, 42, 109, 100],
     },
     {
       name: 'Beneficios',
-      data: [45, 75, 30, 110, 20, 105],
+      data: [11, 32, 45, 32, 34, 52, 41],
     },
   ])
 
-  const chart1Options = ref<ApexCharts.ApexOptions>({
-    chart: {
-      type: 'line',
-      toolbar: { show: false },
-      sparkline: { enabled: false },
-      animations: { enabled: true, speed: 600 },
-    },
-    stroke: {
-      curve: 'smooth',
-      width: 2,
-    },
-    colors: ['#1e3888', '#00d500'],
-    markers: { size: 0 },
-    legend: { show: false },
-    grid: {
-      borderColor: '#f0f0f0',
-      xaxis: { lines: { show: false } },
-      yaxis: { lines: { show: true } },
-    },
-    xaxis: {
-      categories: ['FEB', 'MAR', 'ABRIL', 'MAY', 'JUN', 'JUL'],
-      labels: {
-        style: { colors: '#999', fontSize: '10px' },
-      },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-    },
-    yaxis: {
-      min: 10,
-      max: 130,
-      tickAmount: 3,
-      labels: {
-        style: { colors: '#999', fontSize: '10px' },
-      },
-    },
-    tooltip: { theme: 'light' },
-  })
-
-  // ─── Chart 2: Usuarios registrados (area, 12 meses) ───────────────────────
-  const chart2Series = ref([
-    {
-      name: 'Usuarios registrados',
-      data: [200, 250, 300, 400, 500, 643, 600, 750, 800, 850, 1000, 1200],
-    },
-  ])
-
-  const chart2Options = ref<ApexCharts.ApexOptions>({
+  const chart1Options = reactive<ApexOptions>({
     chart: {
       type: 'area',
+      height: 350,
       toolbar: { show: false },
-      animations: { enabled: true, speed: 600 },
     },
-    stroke: {
-      curve: 'smooth',
-      width: 2,
-    },
-    colors: ['#1e3888'],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.15,
-        opacityTo: 0.02,
-        stops: [0, 90, 100],
-      },
-    },
-    markers: {
-      size: [0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0],
-      colors: ['#1e3888'],
-      strokeWidth: 0,
-    },
-    legend: { show: false },
-    grid: {
-      show: false,
-      padding: {
-        top: 20,
-        bottom: 20,
-      },
-    },
+    colors: ['#1e3888', '#00d500'],
+    dataLabels: { enabled: false },
+    stroke: { curve: 'smooth' },
     xaxis: {
-      categories: [
-        'Feb',
-        'Mar',
-        'Abril',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dic',
-        'Ene',
-      ],
-      labels: {
-        style: { colors: '#999', fontSize: '10px' },
-      },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
+      categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
     },
-    yaxis: { show: false },
-    tooltip: { theme: 'light' },
+    tooltip: {
+      x: { format: 'dd/MM/yy HH:mm' },
+    },
+  })
+
+  const chart2Series = reactive([
+    {
+      name: 'Clientes registrados',
+      data: [300, 400, 350, 500, 490, 600, 700],
+    },
+  ])
+
+  const chart2Options = reactive<ApexOptions>({
+    chart: {
+      type: 'line',
+      height: 350,
+      toolbar: { show: false },
+    },
+    colors: ['#4a148c'],
+    dataLabels: { enabled: false },
+    stroke: { curve: 'smooth' },
+    xaxis: {
+      categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
+    },
   })
 
   return {

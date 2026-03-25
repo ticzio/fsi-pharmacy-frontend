@@ -6,48 +6,49 @@ import CustomTable from '@/components/common/CustomTable.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
 import RedirectButton from '@/components/common/RedirectButton.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
 
 //Composables
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { useTableActions } from '@/composables/useTableActions'
+import { useMissions } from '@/composables/Models/useMissions'
 
-import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_PAGINATION } from '@/const/tableConst'
+import { TITLE_SECTION_COMPONENT, TABLE_HEADERS } from '@/const/tableConst'
 import { BUTTONS_TOOLTIPS } from '@/const/buttonConst'
-
-interface Item {
-  id: string | number
-  [key: string]: any
-}
 
 const router = useRouter()
 const store = useStore()
 const isMobile = computed(() => store.getters.isMobile)
-const { getDefaultActions } = useTableActions()
+const { getDefaultSafeActions } = useTableActions()
+const {
+  loading,
+  missions,
+  pagination,
+  paginationKey,
+  getDataMissions,
+  deactivateMission,
+  deleteMission,
+} = useMissions()
 
-const loading = ref(false)
-const items = ref<Item[]>([])
 const search = ref('')
 
-const paginationKey = 'missions-list'
-const pagination = reactive({
-  currentPage: TABLE_PAGINATION.currentPage,
-  totalPages: TABLE_PAGINATION.totalPages,
-  limit: TABLE_PAGINATION.limit,
-})
-
-const handleTableAction = ({ actionName, item }: { actionName: string; item: Item }) => {
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: any }) => {
   if (actionName === 'edit') {
     // router.push(`/settings/missions/edit/${item.id}`)
+  } else if (actionName === 'deactivate') {
+    await deactivateMission(item)
+  } else if (actionName === 'delete') {
+    await deleteMission(item)
   }
 }
 
 const getTableActions = async (item: any) => {
-  return getDefaultActions(item)
+  return getDefaultSafeActions()
 }
 
-const handleTablePagination = (page: number) => {
-  pagination.currentPage = page
+const handleTablePagination = async (page: number) => {
+  await getDataMissions(page, search.value)
   store.dispatch('pagination/updatePagination', {
     key: paginationKey,
     currentPage: page,
@@ -58,14 +59,15 @@ const goToNew = () => {
   // router.push({ name: 'Nueva Misión' })
 }
 
-const fetchData = () => {
-  search.value = ''
+const fetchData = async () => {
+  await getDataMissions(1, search.value)
 }
 
 onMounted(() => {
   const savedPageGetter = store.getters['pagination/getPage']
-  pagination.currentPage = savedPageGetter(paginationKey)
-  fetchData()
+  const savedPage = savedPageGetter(paginationKey)
+  pagination.currentPage = savedPage
+  getDataMissions(savedPage, search.value)
 })
 </script>
 
@@ -94,10 +96,12 @@ onMounted(() => {
           class="col-12 col-md d-flex flex-md-row gap-2 align-items-stretch align-items-md-end justify-content-md-end mt-1 mt-md-0"
         >
           <FetchButton @fetch="fetchData" />
+          <!-- 
           <RedirectButton
             :tooltip-title="BUTTONS_TOOLTIPS.missions.tooltipTitle"
             @redirect="goToNew"
           />
+          -->
         </div>
       </div>
 
@@ -108,7 +112,7 @@ onMounted(() => {
         }"
       >
         <CustomTable
-          :data="items"
+          :data="missions"
           :headers="TABLE_HEADERS.missions"
           :actions="getTableActions"
           :is-loading="loading"
@@ -118,7 +122,11 @@ onMounted(() => {
           :change-page="handleTablePagination"
           @change-page="handleTablePagination"
           @action-click="handleTableAction"
-        />
+        >
+          <template #cell(active)="{ value }">
+            <StatusBadge :value="value" />
+          </template>
+        </CustomTable>
       </div>
     </div>
   </DashboardLayout>

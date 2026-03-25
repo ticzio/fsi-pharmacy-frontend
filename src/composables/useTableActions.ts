@@ -77,7 +77,7 @@ export const useTableActions = () => {
    */
   const filterActionsByPermissions = (
     actions: Action[],
-    permissionConfig: ActionPermissionConfig
+    permissionConfig: ActionPermissionConfig,
   ): Action[] => {
     if (!isAuthenticated.value) return []
 
@@ -96,7 +96,7 @@ export const useTableActions = () => {
   const getActionsWithPermissions = (
     item: any,
     customActions?: Action[],
-    permissionConfig?: ActionPermissionConfig
+    permissionConfig?: ActionPermissionConfig,
   ): Action[] => {
     const actions = customActions || getDefaultActions(item)
     const config = { ...defaultActionPermissions, ...permissionConfig }
@@ -113,8 +113,8 @@ export const useTableActions = () => {
       name: TABLE_ACTIONS.deactivate.name,
       icon: !item.active ? 'bi bi-x-circle-fill fs-5' : 'bi bi-check-circle-fill fs-5',
       class: !item.active
-        ? `${TABLE_ACTIONS.deactivate.class} btn btn-warning`
-        : `${TABLE_ACTIONS.deactivate.class} btn btn-success`,
+        ? `${TABLE_ACTIONS.deactivate.class} btn bg-warning-subtle border border-warning`
+        : `${TABLE_ACTIONS.deactivate.class} btn btn-success border border-success`,
       tooltip: !item.active ? 'activar' : 'desactivar',
     },
     TABLE_ACTIONS.delete,

@@ -1,65 +1,54 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import titleSection from '@/components/common/titleSection.vue'
 import CustomTable from '@/components/common/CustomTable.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
 import RedirectButton from '@/components/common/RedirectButton.vue'
+import AppImage from '@/components/common/AppImage.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
 
 //Composables
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { useSwalToast } from '@/composables/useSwalToast'
 import { useTableActions } from '@/composables/useTableActions'
+import { useUsers } from '@/composables/Models/useUsers'
 
-import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_PAGINATION } from '@/const/tableConst'
+import { TITLE_SECTION_COMPONENT, TABLE_HEADERS } from '@/const/tableConst'
 import { BUTTONS_TOOLTIPS } from '@/const/buttonConst'
 
-interface Item {
-  id: string | number
-  [key: string]: any
-}
-
 const router = useRouter()
-const swalToast = useSwalToast()
 const store = useStore()
+
 const isMobile = computed(() => store.getters.isMobile)
 const { getDefaultActions } = useTableActions()
+const {
+  loading,
+  users: items,
+  pagination,
+  paginationKey,
+  getDataUsers,
+  deactivateUser,
+  deleteUser,
+} = useUsers()
 
-const loading = ref(false)
-const items = ref<Item[]>([
-  {
-    id: 1,
-    url_image: '',
-    'role.name': 'Operador',
-    full_name: 'Carlos Rodríguez',
-    email: 'carlos.rodriguez@ejemplo.com',
-    phone: '+58 212 333 0001',
-    active: true,
-  },
-  {
-    id: 2,
-    url_image: '',
-    'role.name': 'Operador',
-    full_name: 'Laura Martínez',
-    email: 'laura.martinez@ejemplo.com',
-    phone: '+58 212 444 0002',
-    active: false,
-  },
-])
 const search = ref('')
 
-const paginationKey = 'operators-list'
-const pagination = reactive({
-  currentPage: TABLE_PAGINATION.currentPage,
-  totalPages: TABLE_PAGINATION.totalPages,
-  limit: TABLE_PAGINATION.limit,
-})
+/**
+ * Filtros adicionales para obtener solo operadores (rol 3)
+ */
+const extraParams = {
+  id_type_rol_user: 3,
+}
 
-const handleTableAction = ({ actionName, item }: { actionName: string; item: Item }) => {
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: any }) => {
   if (actionName === 'edit') {
     router.push(`/operators/edit/${item.id}`)
+  } else if (actionName === 'deactivate') {
+    await deactivateUser(item)
+  } else if (actionName === 'delete') {
+    await deleteUser(item)
   }
 }
 
@@ -67,26 +56,26 @@ const getTableActions = async (item: any) => {
   return getDefaultActions(item)
 }
 
-const handleTablePagination = (page: number) => {
-  pagination.currentPage = page
+const handleTablePagination = async (page: number) => {
+  await getDataUsers(page, search.value, extraParams)
   store.dispatch('pagination/updatePagination', {
     key: paginationKey,
     currentPage: page,
   })
 }
 
+const fetchData = async () => {
+  await getDataUsers(1, search.value, extraParams)
+}
+
 const goToNew = () => {
   router.push({ name: 'Nuevo Operador' })
 }
 
-const fetchData = () => {
-  // TODO: Lógica para hacer la petición GET
-  search.value = ''
-}
-
-onMounted(() => {
+onMounted(async () => {
   const savedPageGetter = store.getters['pagination/getPage']
-  pagination.currentPage = savedPageGetter(paginationKey)
+  const savedPage = savedPageGetter(paginationKey)
+  await getDataUsers(savedPage || 1, search.value, extraParams)
 })
 </script>
 
@@ -105,13 +94,14 @@ onMounted(() => {
             id="operators-search"
             v-model="search"
             label="Buscar por:"
-            placeholder="Nombre, correo o teléfono"
+            placeholder="Nombre o correo electrónico"
             :loading="loading"
             :infoTexts="[
               'Puedes buscar por nombre completo',
               'Puedes buscar por correo electrónico',
-              'O por número de teléfono',
             ]"
+            @search="fetchData"
+            only-on-enter
           />
         </div>
 
@@ -119,10 +109,12 @@ onMounted(() => {
           class="col-12 col-md d-flex flex-md-row gap-2 align-items-stretch align-items-md-end justify-content-md-end mt-1 mt-md-0"
         >
           <FetchButton @fetch="fetchData" />
+          <!-- 
           <RedirectButton
             :tooltip-title="BUTTONS_TOOLTIPS.operator.tooltipTitle"
             @redirect="goToNew"
           />
+           -->
         </div>
       </div>
 
@@ -134,7 +126,7 @@ onMounted(() => {
       >
         <CustomTable
           :data="items"
-          :headers="TABLE_HEADERS.administrator"
+          :headers="TABLE_HEADERS.operator"
           :actions="getTableActions"
           :is-loading="loading"
           :current-page="pagination.currentPage"
@@ -143,7 +135,23 @@ onMounted(() => {
           :change-page="handleTablePagination"
           @change-page="handleTablePagination"
           @action-click="handleTableAction"
-        />
+        >
+          <template #cell(url_image_light)="{ value }">
+            <div class="d-flex justify-content-center align-items-center">
+              <AppImage
+                :src="value"
+                type="user"
+                width="40px"
+                height="40px"
+                rounded="rounded shadow-sm"
+              />
+            </div>
+          </template>
+
+          <template #cell(active)="{ value }">
+            <StatusBadge :value="value" />
+          </template>
+        </CustomTable>
       </div>
     </div>
   </DashboardLayout>

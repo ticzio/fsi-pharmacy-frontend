@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import { useSwal } from '@/composables/useSwal'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
 interface Props {
   /** v-model binding */
@@ -25,6 +26,8 @@ interface Props {
   autofocus?: boolean
   /** Array of texts to display in the info alert */
   infoTexts?: string[]
+  /** If true, search will only emit on Enter key press */
+  onlyOnEnter?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -38,6 +41,7 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false,
   autofocus: false,
   infoTexts: () => [],
+  onlyOnEnter: false,
 })
 
 const emit = defineEmits<{
@@ -84,6 +88,9 @@ const handleInput = (event: Event) => {
   internalValue.value = value
   emit('update:modelValue', value)
 
+  // If onlyOnEnter is true, we don't emit search while typing
+  if (props.onlyOnEnter) return
+
   // Debounce the search emission
   if (debounceTimer) clearTimeout(debounceTimer)
 
@@ -93,6 +100,13 @@ const handleInput = (event: Event) => {
   } else if (term.length === 0) {
     // Immediately notify parent when field is emptied
     emit('search', '')
+  }
+}
+
+const handleEnter = () => {
+  if (props.onlyOnEnter) {
+    if (debounceTimer) clearTimeout(debounceTimer)
+    emit('search', String(internalValue.value))
   }
 }
 
@@ -138,11 +152,7 @@ onBeforeUnmount(() => {
       <!-- Search icon or Spinner -->
       <span class="input-group-text search-icon-wrap" :class="{ 'text-primary': isFocused }">
         <template v-if="loading">
-          <span
-            class="spinner-border spinner-border-sm text-primary"
-            role="status"
-            aria-hidden="true"
-          ></span>
+          <LoadingSpinner v-if="loading" class="text-primary" />
         </template>
         <template v-else>
           <i
@@ -167,6 +177,7 @@ onBeforeUnmount(() => {
         @focus="isFocused = true"
         @blur="isFocused = false"
         @keydown.esc="handleClear"
+        @keydown.enter="handleEnter"
       />
 
       <!-- Clear button -->

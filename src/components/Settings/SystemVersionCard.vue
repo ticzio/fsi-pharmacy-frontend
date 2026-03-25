@@ -10,22 +10,29 @@
     <div class="d-flex flex-column gap-1">
       <div class="d-flex justify-content-between">
         <span class="text-white-50 small">Frontend Version</span>
-        <span class="text-white fw-bold small">v2.4.1</span>
+        <span class="text-white fw-bold small">v{{ APP_VERSION }}</span>
       </div>
       <div class="d-flex justify-content-between">
         <span class="text-white-50 small">Backend Version</span>
-        <span class="text-white fw-bold small">v1.8.0</span>
+        <span class="text-white fw-bold small">v{{ API_VERSION }}</span>
       </div>
       <div class="d-flex justify-content-between">
         <span class="text-white-50 small">Backend Chat Version</span>
-        <span class="text-white fw-bold small">v1.2.0</span>
+        <span class="text-white fw-bold small">v{{ chatVersion || '...' }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// System Version Card Component
+import { API_VERSION } from '../../services/initApi'
+import packageJson from '../../../package.json'
+
+defineProps<{
+  chatVersion: string | null
+}>()
+
+const APP_VERSION = packageJson.version
 </script>
 
 <style scoped>

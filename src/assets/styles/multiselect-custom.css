@@ -88,6 +88,8 @@
   background: #fff !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
   z-index: 9999 !important;
+  max-height: 250px !important;
+  overflow-y: auto !important;
 }
 
 .multiselect-custom .multiselect__content {

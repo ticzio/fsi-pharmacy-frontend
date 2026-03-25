@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/components/DashboardLayout.vue'
@@ -43,6 +43,34 @@ const handleGeneralNavigate = (key: string) => {
     console.warn(`Route settings.${key} not found`)
   })
 }
+
+// ── Lógica Centralizada de Estado/Versión del Chat ──
+const chatStatus = ref<'loading' | 'online' | 'offline'>('loading')
+const chatVersion = ref<string | null>(null)
+
+const getChatSystemInfo = async () => {
+  try {
+    const response: any = await store.dispatch('getData', {
+      url: import.meta.env.VITE_CHAT_IFRAME_BACKEND,
+    })
+
+    if (response && response.status === 'OK') {
+      chatStatus.value = 'online'
+      chatVersion.value = response.version
+    } else {
+      chatStatus.value = 'offline'
+      chatVersion.value = 'Error'
+    }
+  } catch (error) {
+    console.error('[FSI] Error al obtener información del chat:', error)
+    chatStatus.value = 'offline'
+    chatVersion.value = 'Error'
+  }
+}
+
+onMounted(() => {
+  getChatSystemInfo()
+})
 </script>
 
 <template>
@@ -64,7 +92,7 @@ const handleGeneralNavigate = (key: string) => {
           <div class="col-12 col-lg-8 d-flex flex-column gap-4">
             <!-- ── Configuración General ── -->
             <GeneralConfigCard @navigate="handleGeneralNavigate" />
-            <SystemVersionCard />
+            <SystemVersionCard :chat-version="chatVersion" />
           </div>
           <!-- /col-lg-8 -->
 
@@ -73,7 +101,7 @@ const handleGeneralNavigate = (key: string) => {
           <!-- ═══════════════════════════════════════════ -->
           <div class="col-12 col-lg-4 d-flex flex-column gap-4">
             <ToolsCard />
-            <SystemStatusCard />
+            <SystemStatusCard :chat-status="chatStatus" />
           </div>
           <!-- /col-lg-4 -->
         </div>
@@ -107,8 +135,11 @@ const handleGeneralNavigate = (key: string) => {
             @navigate="handleGeneralNavigate"
           />
           <ToolsCard v-else-if="activeMobileTab === 'tools'" />
-          <SystemStatusCard v-else-if="activeMobileTab === 'status'" />
-          <SystemVersionCard v-else-if="activeMobileTab === 'version'" />
+          <SystemStatusCard :chat-status="chatStatus" v-else-if="activeMobileTab === 'status'" />
+          <SystemVersionCard
+            :chat-version="chatVersion"
+            v-else-if="activeMobileTab === 'version'"
+          />
         </div>
 
         <!-- Right Sidebar Bubble (Options Menu) -->

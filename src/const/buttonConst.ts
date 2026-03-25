@@ -9,7 +9,9 @@ const BUTTON_TOOLTIPS = {
   administrator: 'Nuevo administrador',
   news: 'Nueva noticia',
   notification: 'Nueva notificación',
-  user: 'Nuevo usuario',
+  user: 'Nuevo cliente',
+  client: 'Nuevo cliente',
+  clients: 'Nuevo cliente',
   operator: 'Nuevo operador',
   // Nuevos contextos de settings
   cities: 'Nueva ciudad',
@@ -19,7 +21,7 @@ const BUTTON_TOOLTIPS = {
   benefitsBanners: 'Nuevo banner de beneficio',
   couponsBanners: 'Nuevo banner de cupón',
   role: 'Nuevo rol',
-  state: 'Nuevo estado',
+  states: 'Nuevo estado',
 } as const
 
 export type ButtonKey = keyof typeof BUTTON_TOOLTIPS
@@ -36,20 +38,21 @@ export const BUTTONS_TOOLTIPS: Record<ButtonKey, ButtonConfig> = Object.fromEntr
 
 export const BUTTONS = {
   new: {
-    icon: 'bi-plus text-white',
+    icon: 'bi bi-plus text-white',
     class: 'btn btn-dark border-radius-right border-radius-left py-2 fw-medium text-light',
     tooltipPos: 'left',
   },
-  filter: {
-    icon: 'bi bi-eraser-fill text-white',
-    class:
-      'btn btn-danger border-radius-right border-radius-left me-auto  py-2 fw-medium text-light',
-    tooltipPos: 'right',
+  save: {
+    icon: 'bi bi-save text-white me-2',
+    class: 'btn btn-dark border-radius-right border-radius-left py-2 fw-medium text-light',
+    tooltipPos: 'left',
+    title: 'Guardar cambios',
   },
-  search: {
-    icon: 'bi bi-search ',
-    class: 'input-group-text border text-primary bg-transparent border-radius-left',
-    tooltipPos: 'top',
+  filter: {
+    icon: 'bi bi-eraser-fill',
+    class:
+      'btn bg-body-tertiary border-radius-right border-radius-left me-auto  py-2 fw-medium text-dark border ',
+    tooltipPos: 'right',
   },
   update: {
     icon: 'bi bi-upload text-white ms-1',

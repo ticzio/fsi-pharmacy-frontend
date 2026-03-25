@@ -10,16 +10,17 @@ import { useStore } from 'vuex'
 import { useLogger } from '@/composables/useLogger'
 import { useCookies } from '@/composables/useCookies'
 import { decodeRole } from '@/composables/useAccessControl'
+import { useUsers } from '@/composables/Models/useUsers'
 
 import { TITLE_SECTION_COMPONENT } from '@/const/tableConst'
-import { URLS } from '@/const/api'
 
 const route = useRoute()
 const router = useRouter()
 const store = useStore()
 const logger = useLogger()
+const { getUser, loading: isUserLoading } = useUsers()
 
-const isLoading = ref(false)
+const isLoading = computed(() => isUserLoading.value)
 const localTitle = ref('Titulo por defecto')
 
 const title = computed(() => localTitle.value || store.getters['utils/isItem'] || '')
@@ -47,7 +48,7 @@ const filteredTabRoutes = ref<typeof allTabRoutes>([])
 // 2. La lógica asíncrona se mueve a una función `async` estándar.
 const determineVisibleTabs = async () => {
   const { getCookie } = useCookies()
-  const hashedRole = getCookie('changan_admin_id_role')
+  const hashedRole = getCookie('fsi_admin_id_role')
   if (!hashedRole) {
     filteredTabRoutes.value = []
     return
@@ -130,19 +131,13 @@ const clearLoadingTimeout = () => {
 // Cargar datos del usuario directamente si es necesario (ej: recarga de página)
 const loadAdminData = async () => {
   try {
-    const response = await store.dispatch('getData', {
-      url: `${URLS.administrator?.prefix || 'admin'}/${route.params.id}`,
-    })
-    if (response.code === 200) {
-      const data = response.data
-      logger.logRequest((URLS.administrator?.prefix || 'admin') + '/' + route.params.id, {}, data)
+    const data = await getUser(route.params.id as string)
+    if (data) {
       localTitle.value = data.first_name + ' ' + data.last_name || data.full_name || ''
       store.dispatch('utils/setIsItem', localTitle.value)
     }
   } catch (error) {
-    logger.logRequest((URLS.administrator?.prefix || 'admin') + '/' + route.params.id, {}, error)
-  } finally {
-    isLoading.value = false
+    console.error('Error loading admin data:', error)
   }
 }
 
@@ -159,7 +154,6 @@ watch(
 
 watch(isGetting, (newValue: boolean) => {
   if (newValue) {
-    isLoading.value = false
     store.dispatch('utils/setIsGetting', false)
   }
 })

@@ -6,39 +6,41 @@ import CustomTable from '@/components/common/CustomTable.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
 import RedirectButton from '@/components/common/RedirectButton.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
+import Modal from '@/components/common/Modal.vue'
+import BannerForm from '@/components/Banners/BannerForm.vue'
+import AppImage from '@/components/common/AppImage.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
 //Composables
-import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { useTableActions } from '@/composables/useTableActions'
+import { useBanners } from '@/composables/Models/useBanners'
 
-import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_PAGINATION } from '@/const/tableConst'
+import { TITLE_SECTION_COMPONENT, TABLE_HEADERS } from '@/const/tableConst'
 import { BUTTONS_TOOLTIPS } from '@/const/buttonConst'
 
-interface Item {
-  id: string | number
-  [key: string]: any
-}
-
-const router = useRouter()
 const store = useStore()
 const isMobile = computed(() => store.getters.isMobile)
 const { getDefaultActions } = useTableActions()
+const { loading, banners, pagination, getDataBanners, saveBanner, deactivateBanner, deleteBanner } =
+  useBanners()
 
-const loading = ref(false)
-const items = ref<Item[]>([])
 const search = ref('')
+const modalFormRef = ref<any>(null)
+const bannerFormRef = ref<any>(null)
+const selectedBanner = ref<any>(null)
+const isEditing = ref(false)
 
-const paginationKey = 'banners-list'
-const pagination = reactive({
-  currentPage: TABLE_PAGINATION.currentPage,
-  totalPages: TABLE_PAGINATION.totalPages,
-  limit: TABLE_PAGINATION.limit,
-})
-
-const handleTableAction = ({ actionName, item }: { actionName: string; item: Item }) => {
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: any }) => {
   if (actionName === 'edit') {
-    // router.push(`/settings/banners/edit/${item.id}`)
+    selectedBanner.value = item
+    isEditing.value = true
+    modalFormRef.value?.openModal()
+  } else if (actionName === 'deactivate') {
+    await deactivateBanner(item)
+  } else if (actionName === 'delete') {
+    await deleteBanner(item)
   }
 }
 
@@ -47,24 +49,27 @@ const getTableActions = async (item: any) => {
 }
 
 const handleTablePagination = (page: number) => {
-  pagination.currentPage = page
-  store.dispatch('pagination/updatePagination', {
-    key: paginationKey,
-    currentPage: page,
-  })
+  getDataBanners(page, search.value)
 }
 
 const goToNew = () => {
-  // router.push({ name: 'Nuevo Banner' })
+  selectedBanner.value = null
+  isEditing.value = false
+  modalFormRef.value?.openModal()
 }
 
 const fetchData = () => {
-  search.value = ''
+  getDataBanners(1, search.value)
+}
+
+const handleFormSubmit = async (formData: any) => {
+  const success = await saveBanner(formData, isEditing.value, selectedBanner.value?.id)
+  if (success) {
+    modalFormRef.value?.closeModal()
+  }
 }
 
 onMounted(() => {
-  const savedPageGetter = store.getters['pagination/getPage']
-  pagination.currentPage = savedPageGetter(paginationKey)
   fetchData()
 })
 </script>
@@ -86,6 +91,7 @@ onMounted(() => {
             label="Buscar por:"
             placeholder="Título del banner"
             :loading="loading"
+            @search="fetchData"
             :infoTexts="['Puedes buscar por el título del banner']"
           />
         </div>
@@ -108,7 +114,7 @@ onMounted(() => {
         }"
       >
         <CustomTable
-          :data="items"
+          :data="banners"
           :headers="TABLE_HEADERS.banners"
           :actions="getTableActions"
           :is-loading="loading"
@@ -118,8 +124,54 @@ onMounted(() => {
           :change-page="handleTablePagination"
           @change-page="handleTablePagination"
           @action-click="handleTableAction"
-        />
+        >
+          <template #cell(url_image_light)="{ value, item }">
+            <div class="d-flex justify-content-center py-1">
+              <AppImage
+                :src="value"
+                :alt="item.name"
+                type="entity"
+                width="120px"
+                height="60px"
+                rounded="rounded-3 shadow-sm border"
+              />
+            </div>
+          </template>
+
+          <template #cell(active)="{ value }">
+            <StatusBadge :value="value" />
+          </template>
+        </CustomTable>
       </div>
     </div>
+
+    <!-- Modal Formulario -->
+    <Modal
+      ref="modalFormRef"
+      id="modalBannerForm"
+      :title="isEditing ? 'Editar Banner' : 'Nuevo Banner'"
+      size="lg"
+    >
+      <BannerForm ref="bannerFormRef" :initial-data="selectedBanner" @submit="handleFormSubmit" />
+      <template #footer>
+        <button
+          type="button"
+          class="btn btn-light border fw-bold"
+          data-bs-dismiss="modal"
+          :disabled="loading"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary fw-bold text-white"
+          @click="bannerFormRef?.handleSubmit()"
+          :disabled="loading"
+        >
+          <LoadingSpinner v-if="loading" class="me-1" />
+          {{ isEditing ? 'Guardar Cambios' : 'Crear Banner' }}
+        </button>
+      </template>
+    </Modal>
   </DashboardLayout>
 </template>

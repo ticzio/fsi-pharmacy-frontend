@@ -38,6 +38,14 @@ const items = [
     color: '#10b981',
     bg: 'rgba(16, 185, 129, 0.12)',
   },
+  {
+    key: 'estados',
+    label: 'Estados',
+    desc: 'Configura los estados y departamentos del país',
+    icon: 'bi-map-fill',
+    color: '#06b6d4',
+    bg: 'rgba(6, 182, 212, 0.12)',
+  },
 ]
 </script>
 
@@ -127,7 +135,20 @@ const items = [
 /* ── Rows ── */
 .gc-rows {
   padding: 0 24px;
+  max-height: 290px; /* Adjust to roughly 4 items */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
+
+.gc-rows::-webkit-scrollbar {
+  width: 4px;
+}
+.gc-rows::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
 
 .gc-row {
   display: flex;

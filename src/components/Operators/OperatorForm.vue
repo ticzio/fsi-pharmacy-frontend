@@ -61,7 +61,7 @@ const props = defineProps<{
             placeholder="Ej. 04141234567"
           />
         </div>
-        <div class="col-12 col-md-12">
+        <div class="col-12 col-md-12" v-if="roleOptions && roleOptions.length > 0">
           <MultiselectCustom
             v-model="form.role_id"
             :options="roleOptions"

@@ -63,15 +63,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { ApexOptions } from 'apexcharts'
+import { useAnalytics } from '@/composables/Models/useAnalytics'
 import ScrollableTabs from '@/components/common/ScrollableTabs.vue'
 import ChatsAnalytics from '@/components/Pharmacies/ChatsAnalytics.vue'
 import OperatorsAnalytics from '@/components/Pharmacies/OperatorsAnalytics.vue'
 import CouponsAnalytics from '@/components/Pharmacies/CouponsAnalytics.vue'
 
 const router = useRouter()
+const { getBackOfficeAnalytics, loading } = useAnalytics()
 const currentTab = ref('chats')
 const transitionName = ref('slide-left')
 
@@ -147,6 +149,51 @@ const topOperators = ref([
 const couponsSeries = ref([45, 25, 15, 15])
 const couponsLabels = ref(['Bienestar', 'Vitalidad', 'Cuidado', 'Otros'])
 const couponsColors = ['#0d6efd', '#6610f2', '#ffc107', '#adb5bd']
+
+/**
+ * Inicializa los datos de analítica desde el servidor.
+ */
+const initAnalytics = async () => {
+  const data = await getBackOfficeAnalytics()
+  if (data) {
+    // Mapeo de KPIs si vienen en la respuesta (ejemplo basado en mock)
+    if (data.kpis) {
+      kpis.value[0].value = data.kpis.total_chats || kpis.value[0].value
+      kpis.value[1].value = data.kpis.active_chats || kpis.value[1].value
+      kpis.value[2].value = data.kpis.online_operators || kpis.value[2].value
+      kpis.value[3].value = data.kpis.avg_time || kpis.value[3].value
+    }
+
+    // Mapeo de Gráfico de Chats
+    if (data.chats_chart) {
+      chatsSeries.value[0].data = data.chats_chart.data || chatsSeries.value[0].data
+      if (data.chats_chart.categories) {
+        chatsOptions.value = {
+          ...chatsOptions.value,
+          xaxis: {
+            ...chatsOptions.value.xaxis,
+            categories: data.chats_chart.categories,
+          },
+        }
+      }
+    }
+
+    // Mapeo de Operadores
+    if (data.top_operators) {
+      topOperators.value = data.top_operators
+    }
+
+    // Mapeo de Cupones
+    if (data.coupons) {
+      couponsSeries.value = data.coupons.series || couponsSeries.value
+      couponsLabels.value = data.coupons.labels || couponsLabels.value
+    }
+  }
+}
+
+onMounted(() => {
+  initAnalytics()
+})
 </script>
 
 <style scoped>

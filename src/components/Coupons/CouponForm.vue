@@ -3,7 +3,8 @@ import { ref, watch, onMounted, computed } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseTextarea from '@/components/common/BaseTextarea.vue'
 import ImageUploader from '@/components/common/ImageUploader.vue'
-import MultiselectCustom from '@/components/common/MultiselectCustom.vue'
+import { useRoute } from 'vue-router'
+import { useMoment } from '@/composables/useMoment'
 
 interface CouponData {
   id?: number | string
@@ -27,6 +28,9 @@ const props = defineProps({
     default: true,
   },
 })
+
+const route = useRoute()
+const { formatToSQL } = useMoment()
 
 const formData = ref<CouponData>({
   code: '',
@@ -58,19 +62,18 @@ const initForm = () => {
       name: props.initialData.name || '',
       description: props.initialData.description || '',
       id_level: props.initialData.id_level || '',
-      start_date: props.initialData.start_date ? props.initialData.start_date.split('T')[0] : '',
-      finish_date: props.initialData.finish_date ? props.initialData.finish_date.split('T')[0] : '',
+      start_date: formatToSQL(props.initialData.start_date) || '',
+      finish_date: formatToSQL(props.initialData.finish_date) || '',
       active: props.initialData.active !== undefined ? props.initialData.active : true,
       url_img: props.initialData.url_img || '',
     }
     previewImageUrl.value = formData.value.url_img || ''
   } else {
-    // Reset form
     formData.value = {
       code: '',
       name: '',
       description: '',
-      id_level: '',
+      id_level: route.params.id_level?.toString() || '',
       start_date: '',
       finish_date: '',
       active: true,
@@ -92,30 +95,21 @@ watch(
   },
 )
 
-// Niveles disponibles para el Multiselect (Ejemplo de opciones)
-const levelOptions = [
-  { id: 1, name: 'Nivel 1' },
-  { id: 2, name: 'Nivel 2' },
-  { id: 3, name: 'Nivel 3' },
-  { id: 4, name: 'Nivel 4' },
-  { id: 5, name: 'Nivel 5' },
-]
-
-// Computed para manejar el valor del Multiselect (que espera un objeto) basado en id_level
-const selectedLevel = computed({
-  get: () => {
-    return formData.value.id_level
-      ? levelOptions.find((lvl) => lvl.id === Number(formData.value.id_level)) || null
-      : null
-  },
-  set: (val: any) => {
-    formData.value.id_level = val ? val.id : ''
-  },
-})
-
 const isCreationMode = computed(() => !props.initialData || !props.initialData.id)
 
 // Helper methods validación en caso de ser no readOnly
+const emit = defineEmits(['submit'])
+
+const handleSubmit = () => {
+  emit('submit', {
+    ...formData.value,
+    imageFile: imageFile.value,
+  })
+}
+
+defineExpose({
+  handleSubmit,
+})
 </script>
 
 <template>
@@ -209,21 +203,7 @@ const isCreationMode = computed(() => !props.initialData || !props.initialData.i
         </div>
 
         <div class="row g-3 mb-1">
-          <div class="col-12 col-sm-4">
-            <MultiselectCustom
-              v-model="selectedLevel"
-              :options="levelOptions"
-              label="Nivel Requerido"
-              placeholder="Seleccione un nivel"
-              labelKey="name"
-              iconKey="id"
-              helperType="custom"
-              :showIcons="false"
-              :clearable="true"
-              :disabled="readOnly"
-            />
-          </div>
-          <div class="col-12 col-sm-4">
+          <div class="col-12 col-sm-6">
             <BaseInput
               id="couponStart"
               type="date"
@@ -232,7 +212,7 @@ const isCreationMode = computed(() => !props.initialData || !props.initialData.i
               :disabled="readOnly"
             />
           </div>
-          <div class="col-12 col-sm-4">
+          <div class="col-12 col-sm-6">
             <BaseInput
               id="couponFinish"
               type="date"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import TitleSection from '@/components/common/titleSection.vue'
 import StatisticCards from '@/components/Home/StatisticCards.vue'
@@ -7,35 +8,69 @@ import LineChart from '@/components/common/Charts/LineChart.vue'
 import AreaChart from '@/components/common/Charts/AreaChart.vue'
 import StackedBarChart from '@/components/common/Charts/StackedBarChart.vue'
 import LatestUsers from '@/components/Home/LatestUsers.vue'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import { useDashboardCharts } from '@/composables/useDashboardCharts'
+import { useClients } from '@/composables/Models/useClients'
+import type { StatisticItem } from '@/components/Home/StatisticCards.vue'
 
-const users = ref([
-  { id: 1, name: 'Gabriel Correa', email: 'gabriel@example.com' },
-  { id: 2, name: 'Robert Daza', email: 'roberts@example.com' },
-  { id: 3, name: 'Gabriela Mujica', email: 'gabriela@example.com' },
-  { id: 4, name: 'Dianne Russell', email: 'dianne@example.com' },
-  { id: 5, name: 'Gabriel Torres', email: 'gabriel@example.com' },
-  { id: 6, name: 'Robert Daza', email: 'roberts@example.com' },
-  { id: 7, name: 'Gabriela Mujica', email: 'gabriela@example.com' },
-  { id: 8, name: 'Dianne Russell', email: 'dianne@example.com' },
-])
+const { clients, getDataClients } = useClients()
+
+onMounted(async () => {
+  await getDataClients(1)
+})
+
+const users = computed(() => {
+  return clients.value.map((client) => ({
+    id: Number(client.id),
+    name: `${client.first_name || ''} ${client.last_name || ''}`.trim(),
+    email: client.email || '',
+  }))
+})
 
 const statisticItems = ref([
-  { value: 12, label: 'Sedes activas' },
-  { value: 34, label: 'Operadores activos' },
-  { value: 234, label: 'Usuarios registrados', highlighted: true },
-  { value: 96, label: 'Cupones canjeados' },
+  { value: 12, label: 'Farmacias activas', to: 'Farmacia' },
+  { value: 34, label: 'Operadores activos', to: 'Operadores' },
+  { value: 234, label: 'Clientes registrados', highlighted: true, to: 'Clientes' },
+  { value: 96, label: 'Cupones canjeados', to: 'Canjes' },
 ])
 
 const { chart1Series, chart1Options, chart2Series, chart2Options } = useDashboardCharts()
+
+const router = useRouter()
+const isRedirecting = ref(false)
+
+const handleCardClick = async (item: StatisticItem) => {
+  isRedirecting.value = true
+  // Doherty Threshold: Small delay to let the user see the "Redirection" state
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  if (item.to) {
+    router.push({ name: item.to })
+  }
+}
+
+const handleUserClick = async (user: { id: number }) => {
+  isRedirecting.value = true
+  // Doherty Threshold: Small delay to let the user see the "Redirection" state
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  router.push({ name: 'Detalle Cliente', params: { id: user.id } })
+}
+
+const handleViewAllUsers = async () => {
+  isRedirecting.value = true
+  // Doherty Threshold: Small delay to let the user see the "Redirection" state
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  router.push({ name: 'Clientes' })
+}
 </script>
 
 <template>
   <DashboardLayout>
     <div
-      class="dashboard-wrapper bg-white shadow-sm p-3 p-md-4 m-0 d-flex flex-column gap-3 gap-md-4"
+      class="dashboard-wrapper bg-white shadow-sm p-3 p-md-4 m-0 d-flex flex-column gap-3 gap-md-4 position-relative"
       style="border-radius: 20px"
     >
+      <!-- REDIRECT OVERLAY -->
+      <LoadingOverlay v-if="isRedirecting" message="Redireccionando..." />
       <!-- HEADER -->
       <TitleSection
         title="Bienvenido"
@@ -44,7 +79,7 @@ const { chart1Series, chart1Options, chart2Series, chart2Options } = useDashboar
       />
 
       <!-- CARDS -->
-      <StatisticCards :items="statisticItems" />
+      <StatisticCards :items="statisticItems" @click-card="handleCardClick" />
 
       <!-- MAIN CONTENT -->
       <div class="row g-4 flex-grow-1">
@@ -100,7 +135,7 @@ const { chart1Series, chart1Options, chart2Series, chart2Options } = useDashboar
             class="card border border-light shadow-sm rounded-4 p-3 p-md-4 pb-5 pb-md-5 h-100 min-h-200"
           >
             <h6 class="fw-bold text-dark mb-4 text-center text-md-start" style="font-size: 1rem">
-              Usuarios registrados
+              Clientes registrados
             </h6>
             <div class="position-relative flex-grow-1 mt-2" style="min-height: 250px">
               <!-- Tooltip Mockup (Desktop only) -->
@@ -125,7 +160,11 @@ const { chart1Series, chart1Options, chart2Series, chart2Options } = useDashboar
         </div>
 
         <!-- RIGHT COLUMN: Users List -->
-        <LatestUsers :users="users" />
+        <LatestUsers
+          :users="users"
+          @click-user="handleUserClick"
+          @click-view-all="handleViewAllUsers"
+        />
       </div>
     </div>
   </DashboardLayout>

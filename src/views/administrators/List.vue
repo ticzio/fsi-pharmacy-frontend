@@ -6,14 +6,17 @@ import CustomTable from '@/components/common/CustomTable.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
 import RedirectButton from '@/components/common/RedirectButton.vue'
+import AppImage from '@/components/common/AppImage.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
 
 //Composables
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { useSwalToast } from '@/composables/useSwalToast'
 import { useTableActions } from '@/composables/useTableActions'
+import { useUsers } from '@/composables/Models/useUsers'
 
-import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_PAGINATION } from '@/const/tableConst'
+import { TITLE_SECTION_COMPONENT, TABLE_HEADERS } from '@/const/tableConst'
 import { BUTTONS_TOOLTIPS } from '@/const/buttonConst'
 
 interface Item {
@@ -27,39 +30,20 @@ const store = useStore()
 const isMobile = computed(() => store.getters.isMobile)
 const { getDefaultActions } = useTableActions()
 
-const loading = ref(false)
-const items = ref<Item[]>([
-  {
-    id: 1,
-    url_image: '',
-    'role.name': 'Administrador',
-    full_name: 'Pedro González',
-    email: 'pedro.gonzalez@ejemplo.com',
-    phone: '+58 212 555 0001',
-    active: true,
-  },
-  {
-    id: 2,
-    url_image: '',
-    'role.name': 'Administrador',
-    full_name: 'Ana López',
-    email: 'ana.lopez@ejemplo.com',
-    phone: '+58 212 666 0002',
-    active: false,
-  },
-])
+const { loading, users, pagination, paginationKey, getDataUsers, deleteUser, deactivateUser } =
+  useUsers()
+
 const search = ref('')
 
-const paginationKey = 'administrators-list'
-const pagination = reactive({
-  currentPage: TABLE_PAGINATION.currentPage,
-  totalPages: TABLE_PAGINATION.totalPages,
-  limit: TABLE_PAGINATION.limit,
-})
+// Pagination and state are handled by the composable
 
-const handleTableAction = ({ actionName, item }: { actionName: string; item: Item }) => {
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: Item }) => {
   if (actionName === 'edit') {
     router.push(`/administrators/edit/${item.id}`)
+  } else if (actionName === 'delete') {
+    await deleteUser(item as any)
+  } else if (actionName === 'deactivate') {
+    await deactivateUser(item as any)
   }
 }
 
@@ -67,26 +51,20 @@ const getTableActions = async (item: any) => {
   return getDefaultActions(item)
 }
 
-const handleTablePagination = (page: number) => {
-  pagination.currentPage = page
-  store.dispatch('pagination/updatePagination', {
-    key: paginationKey,
-    currentPage: page,
-  })
+const handleTablePagination = async (page: number) => {
+  await getDataUsers(page, search.value)
 }
 
 const goToNew = () => {
   router.push({ name: 'Nuevo Administrador' })
 }
 
-const fetchData = () => {
-  // TODO: Lógica para hacer la petición GET
-  search.value = ''
+const fetchData = async () => {
+  await getDataUsers(1, search.value)
 }
 
-onMounted(() => {
-  const savedPageGetter = store.getters['pagination/getPage']
-  pagination.currentPage = savedPageGetter(paginationKey)
+onMounted(async () => {
+  await getDataUsers(pagination.currentPage, search.value)
 })
 </script>
 
@@ -105,13 +83,14 @@ onMounted(() => {
             id="administrators-search"
             v-model="search"
             label="Buscar por:"
-            placeholder="Nombre, correo o teléfono"
+            placeholder="Nombre o correo"
             :loading="loading"
             :infoTexts="[
               'Puedes buscar por nombre completo',
               'Puedes buscar por correo electrónico',
-              'O por número de teléfono',
             ]"
+            @search="fetchData"
+            only-on-enter
           />
         </div>
 
@@ -133,7 +112,7 @@ onMounted(() => {
         }"
       >
         <CustomTable
-          :data="items"
+          :data="users"
           :headers="TABLE_HEADERS.administrator"
           :actions="getTableActions"
           :is-loading="loading"
@@ -143,7 +122,17 @@ onMounted(() => {
           :change-page="handleTablePagination"
           @change-page="handleTablePagination"
           @action-click="handleTableAction"
-        />
+        >
+          <template #cell(url_image_light)="{ value }">
+            <div class="d-flex justify-content-center">
+              <AppImage :src="value" type="user" />
+            </div>
+          </template>
+
+          <template #cell(active)="{ value }">
+            <StatusBadge :value="value" />
+          </template>
+        </CustomTable>
       </div>
     </div>
   </DashboardLayout>

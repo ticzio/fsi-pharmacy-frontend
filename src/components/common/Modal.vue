@@ -106,6 +106,6 @@ defineExpose({ openModal, closeModal })
 
 <style scoped>
 .modal-content {
-  overflow: hidden;
+  overflow: visible;
 }
 </style>

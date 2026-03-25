@@ -47,9 +47,11 @@ const store = createStore({
      *   // Retorna una promesa con los datos
      */
     getData({ commit }: { commit: Function }, form: { url: string; params?: Record<string, any> }) {
+      const isAbsolute = form.url.startsWith('http')
+      const finalUrl = isAbsolute ? form.url : '/' + form.url
       return new Promise((resolve, reject) => {
         apiClient
-          .get('/' + form.url, {
+          .get(finalUrl, {
             params: { active: 1, ...(form.params || {}) },
           })
           .then((response) => resolve(response.data))
@@ -124,15 +126,19 @@ const store = createStore({
           })
           .then((response) => {
             if (response.data.code === 200) {
-              setCookie('changan_admin_token', response.data.auth.token)
-              setCookie('changan_admin_full_name', response.data.full_name)
-              const id_role_hashing = btoa(response.data.id_role.toString())
-              setCookie('changan_admin_id_role', id_role_hashing)
-              setCookie('changan_admin_id_admin', response.data.id_admin)
-              if (response.data.url_image) {
-                setCookie('changan_admin_url_image', response.data.url_image)
+              const userData = response.data.data
+              setCookie('fsi_admin_token', userData.auth.token)
+              setCookie('fsi_admin_full_name', userData.full_name)
+              setCookie('fsi_admin_id_user', userData.id)
+              setCookie('fsi_admin_code_user', userData.code)
+              const id_role_hashing = btoa(userData.id_type_rol_user.toString())
+              setCookie('fsi_admin_id_role', id_role_hashing)
+
+              //setCookie('fsi_admin_id_admin', userData.id_admin)
+              if (userData.url_image) {
+                setCookie('fsi_admin_url_image', userData.url_image)
               }
-              commit('SET_USER', response.data)
+              commit('SET_USER', userData)
               resetAuthRole()
               resolve(response.data)
             } else {
@@ -149,11 +155,13 @@ const store = createStore({
       const { resetAuthRole } = useAuth()
       const { removeCookie } = useCookies()
 
-      removeCookie('changan_admin_token')
-      removeCookie('changan_admin_full_name')
-      removeCookie('changan_admin_id_role')
-      removeCookie('changan_admin_id_admin')
-      removeCookie('changan_admin_url_image')
+      removeCookie('fsi_admin_token')
+      removeCookie('fsi_admin_full_name')
+      removeCookie('fsi_admin_id_role')
+      removeCookie('fsi_admin_id_admin')
+      removeCookie('fsi_admin_url_image')
+      removeCookie('fsi_admin_code_user')
+      removeCookie('fsi_admin_id_user')
 
       resetAuthRole()
 

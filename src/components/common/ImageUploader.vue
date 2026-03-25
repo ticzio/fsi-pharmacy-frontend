@@ -179,8 +179,8 @@ const props = withDefaults(
   }>(),
   {
     pasteBehavior: 'global-active',
-    acceptedFormats: 'image/png, image/jpeg, image/jpg',
-    maxSizeMB: 3,
+    acceptedFormats: 'image/png, image/jpeg, image/jpg, image/gif',
+    maxSizeMB: 1.5,
     placeholder: 'Haz click para subir una imagen',
   },
 )
@@ -229,8 +229,12 @@ watch(
   () => props.modelValue,
   (newVal) => {
     selectedImage.value = newVal || null
-    if (newVal && isImage((newVal as any).name)) {
-      readFile(newVal as any)
+    if (newVal instanceof File) {
+      if (isImage(newVal.name) || newVal.type.startsWith('image/')) {
+        readFile(newVal)
+      }
+    } else if (typeof newVal === 'string') {
+      imageUrl.value = newVal
     } else if (!newVal) {
       imageUrl.value = props.initialImageUrl || null
     }
@@ -252,7 +256,7 @@ onMounted(() => {
   } else if (props.pasteBehavior === 'global-active') {
     document.addEventListener('paste', handlePaste)
   }
-  window.addEventListener('quic-image-uploader-active', handleActiveBroadcast as any)
+  window.addEventListener('fsi-image-uploader-active', handleActiveBroadcast as any)
 })
 
 onUnmounted(() => {
@@ -261,7 +265,7 @@ onUnmounted(() => {
   } else if (props.pasteBehavior === 'global-active') {
     document.removeEventListener('paste', handlePaste)
   }
-  window.removeEventListener('quic-image-uploader-active', handleActiveBroadcast as any)
+  window.removeEventListener('fsi-image-uploader-active', handleActiveBroadcast as any)
 })
 
 function onFileSelected(event: Event) {
@@ -329,13 +333,24 @@ function isImage(nameOrUrl: string) {
     lower.startsWith('http') ||
     lower.endsWith('.png') ||
     lower.endsWith('.jpg') ||
-    lower.endsWith('.jpeg')
+    lower.endsWith('.jpeg') ||
+    lower.endsWith('.gif')
   )
 }
 
 function setImageFromProps() {
   if (props.initialImageUrl && isImage(props.initialImageUrl)) {
     imageUrl.value = props.initialImageUrl
+  }
+  
+  if (props.modelValue) {
+    if (props.modelValue instanceof File) {
+      if (isImage(props.modelValue.name) || props.modelValue.type.startsWith('image/')) {
+        readFile(props.modelValue)
+      }
+    } else if (typeof props.modelValue === 'string') {
+      imageUrl.value = props.modelValue
+    }
   }
 }
 
@@ -400,7 +415,7 @@ function handlePaste(event: ClipboardEvent) {
 }
 
 function broadcastActive(id: string) {
-  window.dispatchEvent(new CustomEvent('quic-image-uploader-active', { detail: { id } }))
+  window.dispatchEvent(new CustomEvent('fsi-image-uploader-active', { detail: { id } }))
 }
 
 function handleActiveBroadcast(e: Event) {
@@ -497,8 +512,8 @@ Props disponibles:
 - round: boolean (si es true, imagen circular; si es false, rectangular)
 - initialImageUrl: string | null (URL de imagen inicial, opcional)
 - inputDisabled: boolean (si es true, solo vista previa, no permite subir)
-- acceptedFormats: string (formatos aceptados, por defecto: 'image/png, image/jpeg, image/jpg')
-- maxSizeMB: number (tamaño máximo en MB, por defecto: 3)
+- acceptedFormats: string (formatos aceptados, por defecto: 'image/png, image/jpeg, image/jpg, image/gif')
+- maxSizeMB: number (tamaño máximo en MB, por defecto: 1.5)
 
 Eventos:
 - @update:modelValue="(file: File | null) => void" // Se emite cuando el usuario selecciona o borra una imagen
@@ -522,7 +537,7 @@ Ejemplo con formatos personalizados (PDF, documentos):
 Ejemplo aceptando imágenes y PDFs:
 <ImageUploader
   v-model="selectedFile"
-  accepted-formats="image/png, image/jpeg, image/jpg, application/pdf"
+  accepted-formats="image/png, image/jpeg, image/jpg, image/gif, application/pdf"
   :max-size-m-b="5"
 />
 

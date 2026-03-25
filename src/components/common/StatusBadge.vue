@@ -10,8 +10,8 @@ import { computed } from 'vue'
 // Constantes locales para estilos de estado
 const STATUS_STYLES = {
   base: 'w-100 border-radius-left border-radius-right p-2 text-uppercase',
-  active: 'badge border-primary text-white border-0 bg-primary-subtle',
-  inactive: 'badge bg-body-tertiary text-body-secondary border-0 border-body-50',
+  active: 'badge text-white border border-success bg-success-subtle',
+  inactive: 'badge bg-body-tertiary text-body-secondary border border-body-50',
   textActive: 'Activo',
   textInactive: 'Inactivo',
 }

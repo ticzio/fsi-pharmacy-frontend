@@ -1,44 +1,45 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import titleSection from '@/components/common/titleSection.vue'
 import CustomTable from '@/components/common/CustomTable.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
 import RedirectButton from '@/components/common/RedirectButton.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
+import Modal from '@/components/common/Modal.vue'
+import CityForm from '@/components/Cities/CityForm.vue'
 
 //Composables
-import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { useTableActions } from '@/composables/useTableActions'
+import { useCities } from '@/composables/Models/useCities'
 
-import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_PAGINATION } from '@/const/tableConst'
+import { TITLE_SECTION_COMPONENT, TABLE_HEADERS } from '@/const/tableConst'
 import { BUTTONS_TOOLTIPS } from '@/const/buttonConst'
 
-interface Item {
-  id: string | number
-  [key: string]: any
-}
-
-const router = useRouter()
 const store = useStore()
 const isMobile = computed(() => store.getters.isMobile)
 const { getDefaultActions } = useTableActions()
+const { loading, cities, pagination, getDataCities, saveCity, deactivateCity, deleteCity } =
+  useCities()
 
-const loading = ref(false)
-const items = ref<Item[]>([])
 const search = ref('')
+const modalFormRef = ref<any>(null)
+const cityFormRef = ref<any>(null)
+const selectedCity = ref<any>(null)
+const isEditing = ref(false)
 
-const paginationKey = 'cities-list'
-const pagination = reactive({
-  currentPage: TABLE_PAGINATION.currentPage,
-  totalPages: TABLE_PAGINATION.totalPages,
-  limit: TABLE_PAGINATION.limit,
-})
-
-const handleTableAction = ({ actionName, item }: { actionName: string; item: Item }) => {
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: any }) => {
   if (actionName === 'edit') {
-    // router.push(`/settings/cities/edit/${item.id}`)
+    selectedCity.value = item
+    isEditing.value = true
+    modalFormRef.value?.openModal()
+  } else if (actionName === 'deactivate') {
+    await deactivateCity(item)
+  } else if (actionName === 'delete') {
+    await deleteCity(item)
   }
 }
 
@@ -47,24 +48,27 @@ const getTableActions = async (item: any) => {
 }
 
 const handleTablePagination = (page: number) => {
-  pagination.currentPage = page
-  store.dispatch('pagination/updatePagination', {
-    key: paginationKey,
-    currentPage: page,
-  })
+  getDataCities(page, search.value)
 }
 
 const goToNew = () => {
-  // router.push({ name: 'Nueva Ciudad' })
+  selectedCity.value = null
+  isEditing.value = false
+  modalFormRef.value?.openModal()
 }
 
 const fetchData = () => {
-  search.value = ''
+  getDataCities(1, search.value)
+}
+
+const handleFormSubmit = async (formData: any) => {
+  const success = await saveCity(formData, isEditing.value, selectedCity.value?.id)
+  if (success) {
+    modalFormRef.value?.closeModal()
+  }
 }
 
 onMounted(() => {
-  const savedPageGetter = store.getters['pagination/getPage']
-  pagination.currentPage = savedPageGetter(paginationKey)
   fetchData()
 })
 </script>
@@ -86,7 +90,9 @@ onMounted(() => {
             label="Buscar por:"
             placeholder="Nombre de la ciudad"
             :loading="loading"
+            @search="fetchData"
             :infoTexts="['Puedes buscar por nombre de la ciudad', 'O por el estado']"
+            only-on-enter
           />
         </div>
 
@@ -108,7 +114,7 @@ onMounted(() => {
         }"
       >
         <CustomTable
-          :data="items"
+          :data="cities"
           :headers="TABLE_HEADERS.cities"
           :actions="getTableActions"
           :is-loading="loading"
@@ -118,8 +124,41 @@ onMounted(() => {
           :change-page="handleTablePagination"
           @change-page="handleTablePagination"
           @action-click="handleTableAction"
-        />
+        >
+          <template #cell(active)="{ value }">
+            <StatusBadge :value="value" />
+          </template>
+        </CustomTable>
       </div>
     </div>
+
+    <!-- Modal Formulario -->
+    <Modal
+      ref="modalFormRef"
+      id="modalCityForm"
+      :title="isEditing ? 'Editar Ciudad' : 'Nueva Ciudad'"
+      size="md"
+    >
+      <CityForm ref="cityFormRef" :initial-data="selectedCity" @submit="handleFormSubmit" />
+      <template #footer>
+        <button
+          type="button"
+          class="btn btn-light border fw-bold"
+          data-bs-dismiss="modal"
+          :disabled="loading"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary fw-bold text-white"
+          @click="cityFormRef?.handleSubmit()"
+          :disabled="loading"
+        >
+          <LoadingSpinner v-if="loading" class="me-1" />
+          {{ isEditing ? 'Guardar Cambios' : 'Crear Ciudad' }}
+        </button>
+      </template>
+    </Modal>
   </DashboardLayout>
 </template>

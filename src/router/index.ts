@@ -5,10 +5,10 @@ import { roleHasAllPermissions } from '@/const/rolePermissions'
 
 import dashboardRoutes from './routes/dashboard'
 import pharmacyRoutes from './routes/pharmacy'
-import couponsRoutes from './routes/coupons'
+import couponsRoutes from './routes/exchanges'
 import newsRoutes from './routes/news'
 import notificationsRoutes from './routes/notifications'
-import usersRoutes from './routes/users'
+import clientRoutes from './routes/client'
 import operatorsRoutes from './routes/operators'
 import administratorsRoutes from './routes/administrators'
 import settingsRoutes from './routes/settings'
@@ -31,7 +31,7 @@ const router = createRouter({
     ...couponsRoutes,
     ...newsRoutes,
     ...notificationsRoutes,
-    ...usersRoutes,
+    ...clientRoutes,
     ...operatorsRoutes,
     ...administratorsRoutes,
     ...settingsRoutes,

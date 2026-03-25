@@ -12,12 +12,6 @@
 
     <div class="d-flex flex-column gap-2">
       <div class="status-row d-flex justify-content-between align-items-center rounded-3 px-3 py-2">
-        <span class="small fw-semibold text-dark">API Backend</span>
-        <span class="badge rounded-pill status-badge-success">
-          <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem"></i>Activo
-        </span>
-      </div>
-      <div class="status-row d-flex justify-content-between align-items-center rounded-3 px-3 py-2">
         <span class="small fw-semibold text-dark">Conexión a Internet</span>
         <span v-if="isOnline" class="badge rounded-pill status-badge-success">
           <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem"></i>Conectado
@@ -29,8 +23,14 @@
 
       <div class="status-row d-flex justify-content-between align-items-center rounded-3 px-3 py-2">
         <span class="small fw-semibold text-dark">Chat (API Externa)</span>
-        <span class="badge rounded-pill status-badge-success">
-          <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem"></i>Activo
+        <span v-if="chatStatus === 'loading'" class="badge rounded-pill status-badge-warning">
+          <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem"></i>Cargando
+        </span>
+        <span v-else-if="chatStatus === 'online'" class="badge rounded-pill status-badge-success">
+          <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem"></i>En línea
+        </span>
+        <span v-else class="badge rounded-pill status-badge-danger">
+          <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem"></i>Fuera de línea
         </span>
       </div>
     </div>
@@ -39,6 +39,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+
+defineProps<{
+  chatStatus: 'loading' | 'online' | 'offline'
+}>()
 
 const isOnline = ref(navigator.onLine)
 
@@ -97,6 +101,13 @@ onUnmounted(() => {
 .status-badge-danger {
   background: rgba(239, 68, 68, 0.15);
   color: #dc2626;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+.status-badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
   font-weight: 600;
   font-size: 0.72rem;
 }

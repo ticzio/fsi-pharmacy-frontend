@@ -4,6 +4,8 @@ import CustomTable from '@/components/common/CustomTable.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
 import RedirectButton from '@/components/common/RedirectButton.vue'
+import AppImage from '@/components/common/AppImage.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
 
 //Composables
 import { useRouter } from 'vue-router'
@@ -12,8 +14,9 @@ import { useSwalToast } from '@/composables/useSwalToast'
 import { useTableActions } from '@/composables/useTableActions'
 import { useRoute } from 'vue-router'
 
-import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_PAGINATION } from '@/const/tableConst'
+import { TABLE_HEADERS } from '@/const/tableConst'
 import { BUTTONS_TOOLTIPS } from '@/const/buttonConst'
+import { useUsers } from '@/composables/Models/useUsers'
 
 interface Item {
   id: string | number
@@ -26,43 +29,21 @@ const swalToast = useSwalToast()
 const store = useStore()
 const isMobile = computed(() => store.getters.isMobile)
 const { getDefaultActions } = useTableActions()
+const { loading, users, pagination, paginationKey, getDataUsers, deactivateUser, deleteUser } =
+  useUsers()
 
-const loading = ref(false)
-const items = ref<Item[]>([
-  {
-    id: 1,
-    url_image: '',
-    'role.name': 'Operador',
-    full_name: 'Carlos Rodríguez',
-    email: 'carlos.rodriguez@ejemplo.com',
-    phone: '+58 212 333 0001',
-    active: true,
-  },
-  {
-    id: 2,
-    url_image: '',
-    'role.name': 'Operador',
-    full_name: 'Laura Martínez',
-    email: 'laura.martinez@ejemplo.com',
-    phone: '+58 212 444 0002',
-    active: false,
-  },
-])
 const search = ref('')
 
-const paginationKey = 'operators-list'
-const pagination = reactive({
-  currentPage: TABLE_PAGINATION.currentPage,
-  totalPages: TABLE_PAGINATION.totalPages,
-  limit: TABLE_PAGINATION.limit,
-})
-
-const handleTableAction = ({ actionName, item }: { actionName: string; item: any }) => {
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: any }) => {
   if (actionName === 'edit') {
     router.push({
       name: 'Editar Operador de la Farmacia',
       params: { id_pharmacy: route.params.id_pharmacy, id: item.id },
     })
+  } else if (actionName === 'deactivate') {
+    await deactivateUser(item as any)
+  } else if (actionName === 'delete') {
+    await deleteUser(item as any)
   }
 }
 
@@ -70,26 +51,29 @@ const getTableActions = async (item: any) => {
   return getDefaultActions(item)
 }
 
-const handleTablePagination = (page: number) => {
+const handleTablePagination = async (page: number) => {
   pagination.currentPage = page
   store.dispatch('pagination/updatePagination', {
     key: paginationKey,
     currentPage: page,
   })
+  await getDataUsers(page, search.value, { id_pharmacy: route.params.id_pharmacy })
 }
 
 const goToNew = () => {
   router.push({ name: 'Nuevo Operador de la Farmacia' })
 }
 
-const fetchData = () => {
-  // TODO: Lógica para hacer la petición GET
-  search.value = ''
+const fetchData = async () => {
+  await getDataUsers(1, search.value, { id_pharmacy: route.params.id_pharmacy })
 }
 
-onMounted(() => {
+onMounted(async () => {
   const savedPageGetter = store.getters['pagination/getPage']
   pagination.currentPage = savedPageGetter(paginationKey)
+  await getDataUsers(pagination.currentPage, search.value, {
+    id_pharmacy: route.params.id_pharmacy,
+  })
 })
 </script>
 
@@ -109,6 +93,8 @@ onMounted(() => {
             'Puedes buscar por correo electrónico',
             'O por número de teléfono',
           ]"
+          @search="fetchData"
+          only-on-enter
         />
       </div>
 
@@ -130,8 +116,8 @@ onMounted(() => {
       }"
     >
       <CustomTable
-        :data="items"
-        :headers="TABLE_HEADERS.administrator"
+        :data="users"
+        :headers="TABLE_HEADERS.operator"
         :actions="getTableActions"
         :is-loading="loading"
         :current-page="pagination.currentPage"
@@ -140,7 +126,17 @@ onMounted(() => {
         :change-page="handleTablePagination"
         @change-page="handleTablePagination"
         @action-click="handleTableAction"
-      />
+      >
+        <template #cell(url_image_light)="{ value }">
+          <div class="d-flex justify-content-center">
+            <AppImage :src="value" type="user" />
+          </div>
+        </template>
+
+        <template #cell(active)="{ value }">
+          <StatusBadge :value="value" />
+        </template>
+      </CustomTable>
     </div>
   </div>
 </template>

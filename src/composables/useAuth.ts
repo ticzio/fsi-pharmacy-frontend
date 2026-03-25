@@ -13,7 +13,7 @@ const isRoleInitialized = ref(false)
  */
 function initializeRole() {
   try {
-    const hashedRole = Cookies.get('changan_admin_id_role') || Cookies.get('id_role')
+    const hashedRole = Cookies.get('fsi_admin_id_role') || Cookies.get('id_role')
 
     if (hashedRole) {
       const decodedRoleString = atob(hashedRole)

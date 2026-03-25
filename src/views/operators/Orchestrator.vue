@@ -10,6 +10,7 @@ import { useStore } from 'vuex'
 import { useLogger } from '@/composables/useLogger'
 import { useCookies } from '@/composables/useCookies'
 import { decodeRole } from '@/composables/useAccessControl'
+import { useUsers } from '@/composables/Models/useUsers'
 
 import { TITLE_SECTION_COMPONENT } from '@/const/tableConst'
 import { URLS } from '@/const/api'
@@ -18,6 +19,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useStore()
 const logger = useLogger()
+const { getUser, user: userData, loading: isUserLoading } = useUsers()
 
 const isLoading = ref(false)
 const localTitle = ref('Titulo por defecto')
@@ -49,7 +51,7 @@ const filteredTabRoutes = ref<typeof allTabRoutes>([])
 // 2. La lógica asíncrona se mueve a una función `async` estándar.
 const determineVisibleTabs = async () => {
   const { getCookie } = useCookies()
-  const hashedRole = getCookie('changan_admin_id_role')
+  const hashedRole = getCookie('fsi_admin_id_role')
   if (!hashedRole) {
     filteredTabRoutes.value = []
     return
@@ -131,18 +133,15 @@ const clearLoadingTimeout = () => {
 
 // Cargar datos del operador directamente si es necesario (ej: recarga de página)
 const loadOperatorData = async () => {
+  isLoading.value = true
   try {
-    const response = await store.dispatch('getData', {
-      url: `${URLS.operators?.prefix || 'operators'}/${route.params.id}`,
-    })
-    if (response.code === 200) {
-      const data = response.data
-      logger.logRequest((URLS.operators?.prefix || 'operators') + '/' + route.params.id, {}, data)
+    const data = await getUser(route.params.id as string)
+    if (data) {
       localTitle.value = data.first_name + ' ' + data.last_name || data.full_name || ''
       store.dispatch('utils/setIsItem', localTitle.value)
     }
   } catch (error) {
-    logger.logRequest((URLS.operators?.prefix || 'operators') + '/' + route.params.id, {}, error)
+    logger.logRequest(URLS.user.prefix + '/' + route.params.id, {}, error)
   } finally {
     isLoading.value = false
   }
@@ -174,7 +173,7 @@ onMounted(async () => {
     startLoadingTimeout()
   } else {
     // Si no está cargando, cargamos los datos inmediatamente
-    // loadOperatorData()
+    loadOperatorData()
   }
 })
 
@@ -204,7 +203,7 @@ onBeforeUnmount(() => {
           <div class="tab-pane fade show active" role="tabpanel">
             <router-view v-slot="{ Component }">
               <transition :name="transitionName" mode="out-in">
-                <component :is="Component" :key="$route.fullPath" />
+                <component :is="Component" :key="$route.fullPath" :operator-data="userData" />
               </transition>
             </router-view>
           </div>

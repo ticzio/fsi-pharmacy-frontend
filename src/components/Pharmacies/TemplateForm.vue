@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
@@ -114,12 +115,7 @@ const handleCancel = () => {
         class="btn btn-primary px-4 py-2 fw-medium rounded-pill shadow-sm submit-btn w-100 w-sm-auto d-flex align-items-center"
         :disabled="isSubmitting"
       >
-        <span
-          v-if="isSubmitting"
-          class="spinner-border spinner-border-sm me-2"
-          role="status"
-          aria-hidden="true"
-        ></span>
+        <LoadingSpinner v-if="isSubmitting" class="me-2" />
         <i v-else class="bi bi-save-fill me-2"></i>
         {{ isSubmitting ? 'Guardando...' : 'Guardar plantilla' }}
       </button>

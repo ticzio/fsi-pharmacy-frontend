@@ -12,12 +12,13 @@ import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { useSwalToast } from '@/composables/useSwalToast'
 import { useSwal } from '@/composables/useSwal'
-import { useLocationInfo } from '@/composables/useLocationInfo'
 import { useTableActions } from '@/composables/useTableActions'
-import { useMasters } from '@/composables/Masters/useMasters'
-import defaultProfileImage from '@/assets/images/default-profile.png'
+import { usePharmacy } from '@/composables/Models/usePharmacy'
+import { useStates } from '@/composables/Models/useStates'
+import { useCities } from '@/composables/Models/useCities'
 import FetchButton from '@/components/common/FetchButton.vue'
 import RedirectButton from '@/components/common/RedirectButton.vue'
+import AppImage from '@/components/common/AppImage.vue'
 
 import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_PAGINATION } from '@/const/tableConst'
 import { BUTTONS_TOOLTIPS } from '@/const/buttonConst'
@@ -31,108 +32,31 @@ interface Item {
 const router = useRouter()
 const swalToast = useSwalToast()
 const swal = useSwal()
-const { showLocationInfo } = useLocationInfo()
 const store = useStore()
 const isMobile = computed(() => store.getters.isMobile)
 const { getDefaultActions } = useTableActions()
 
-// Masters composable para states y cities
-const {
-  states,
-  customIconMapState,
-  customDescriptionMapState,
-  getStates,
-  cities,
-  customIconMapCity,
-  customDescriptionMapCity,
-  getCities,
-  clearCities,
-} = useMasters()
+const { states, getStates, customIconState } = useStates()
+const { cities, getCities, customIconCity } = useCities()
 
-const loading = ref(false)
-const concessionaires = ref<Item[]>([
-  {
-    id: 1,
-    name: 'Farmatodo',
-    ubication: 'Caracas, Distrito Capital',
-    id_type_city: 1,
-    url_image: '',
-    description: 'Cadena de farmacias líder en Venezuela',
-    url_instagram: 'https://instagram.com/farmatodo',
-    url_google_map: 'https://maps.google.com/?q=10.4806,-66.9036',
-    lat: 10.4806,
-    lon: -66.9036,
-    opening_week: '07:00 AM',
-    close_week: '10:00 PM',
-    opening_saturday: '08:00 AM',
-    close_saturday: '09:00 PM',
-    opening_sunday: '08:00 AM',
-    close_sunday: '08:00 PM',
-    url_whatsapp: 'https://wa.me/581234567890',
-    code: 'FARM-001',
-    phone: '+58 212 123 4567',
-    active: true,
-    timestamp: '2023-10-01T12:00:00Z',
-  },
-  {
-    id: 2,
-    name: 'Locatel',
-    ubication: 'Chacao, Miranda',
-    id_type_city: 2,
-    url_image: '',
-    description: 'Farmacia y equipos médicos',
-    url_instagram: 'https://instagram.com/locatel',
-    url_google_map: 'https://maps.google.com/?q=10.4916,-66.8524',
-    lat: 10.4916,
-    lon: -66.8524,
-    opening_week: '08:00 AM',
-    close_week: '09:00 PM',
-    opening_saturday: '09:00 AM',
-    close_saturday: '08:00 PM',
-    opening_sunday: '09:00 AM',
-    close_sunday: '06:00 PM',
-    url_whatsapp: 'https://wa.me/581234567891',
-    code: 'FARM-002',
-    phone: '+58 212 987 6543',
-    active: false,
-    timestamp: '2023-10-02T12:00:00Z',
-  },
-  {
-    id: 3,
-    name: 'Farmahorro',
-    ubication: 'Baruta, Miranda',
-    id_type_city: 3,
-    url_image: '',
-    description: 'Red de farmacias con excelentes precios',
-    url_instagram: 'https://instagram.com/farmahorro',
-    url_google_map: 'https://maps.google.com/?q=10.4447,-66.8687',
-    lat: 10.4447,
-    lon: -66.8687,
-    opening_week: '07:30 AM',
-    close_week: '08:30 PM',
-    opening_saturday: '08:30 AM',
-    close_saturday: '07:30 PM',
-    opening_sunday: '08:30 AM',
-    close_sunday: '05:00 PM',
-    url_whatsapp: 'https://wa.me/581234567892',
-    code: 'FARM-003',
-    phone: '+58 212 111 2222',
-    active: true,
-    timestamp: '2023-10-03T12:00:00Z',
-  },
-])
+const clearCities = () => {
+  cities.value = []
+}
+const {
+  loading,
+  pharmacies,
+  pagination,
+  paginationKey,
+  getDataPharmacies,
+  deactivatePharmacy,
+  deletePharmacy,
+} = usePharmacy()
+
 const selectedCity = ref<Item | null>(null)
 const selectedState = ref<Item | null>(null)
 const search = ref('')
 
-const paginationKey = 'concessionaire-list'
-const pagination = reactive({
-  currentPage: TABLE_PAGINATION.currentPage,
-  totalPages: TABLE_PAGINATION.totalPages,
-  limit: TABLE_PAGINATION.limit,
-})
-
-const handleTableAction = ({ actionName, item }: { actionName: string; item: any }) => {
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: any }) => {
   if (actionName === 'edit') {
     if (!item.active) {
       swalToast.showError(ERROR.errorEdited)
@@ -140,6 +64,10 @@ const handleTableAction = ({ actionName, item }: { actionName: string; item: any
     }
 
     router.push(`/pharmacy/edit/${item.id}/detail-pharmacies`)
+  } else if (actionName === 'deactivate') {
+    await deactivatePharmacy(item)
+  } else if (actionName === 'delete') {
+    await deletePharmacy(item)
   }
 }
 
@@ -149,28 +77,11 @@ const getTableActions = async (item: any) => {
 
 const handleStateChange = async () => {
   selectedCity.value = null
-  if (selectedState.value?.id) {
-    await getCities(Number(selectedState.value.id))
+  if (selectedState.value) {
+    await getCities(selectedState.value.id)
   } else {
     clearCities()
   }
-}
-
-const showAddressInfo = async (item: any) => {
-  const address = item.ubication || 'Sin ubicación registrada'
-  const idCity = item.id_type_city
-
-  await showLocationInfo({
-    idCity,
-    title: 'Ubicación de la farmacia',
-    subtitle: 'Revisa la información de ubicación:',
-    address,
-    latitude: item.lat,
-    longitude: item.lon,
-    showAddress: true,
-    showMapsLink: true,
-    enableCopy: true,
-  })
 }
 
 const handleTablePagination = (page: number) => {
@@ -180,29 +91,45 @@ const handleTablePagination = (page: number) => {
     key: paginationKey,
     currentPage: page,
   })
+  getDataPharmacies(page, search.value, selectedCity.value?.id)
 }
 
 const goToNew = () => {
   router.push({ name: 'Nueva Farmacia' })
 }
 
-const fetchData = () => {
-  // TODO: Lógica para hacer la petición GET
+const clearFilters = () => {
+  search.value = ''
+  const shouldFetch = selectedCity.value === null
   selectedState.value = null
   selectedCity.value = null
-  search.value = ''
+  
+  if (shouldFetch) {
+    fetchData()
+  }
+}
+
+const fetchData = () => {
+  pagination.currentPage = 1
+  getDataPharmacies(1, search.value, selectedCity.value?.id)
 }
 
 onMounted(() => {
   const savedPageGetter = store.getters['pagination/getPage']
-  pagination.currentPage = savedPageGetter(paginationKey)
+  pagination.currentPage = savedPageGetter(paginationKey) || 1
 
   getStates()
+  getDataPharmacies(pagination.currentPage, search.value, selectedCity.value?.id)
 })
 
 // Watch para detectar cambios en el estado seleccionado
 watch(selectedState, () => {
   handleStateChange()
+})
+
+// Watch para detectar cambios en la ciudad seleccionada
+watch(selectedCity, () => {
+  fetchData()
 })
 </script>
 
@@ -221,13 +148,11 @@ watch(selectedState, () => {
             id="pharmacy-search"
             v-model="search"
             label="Buscar por:"
-            placeholder="Código, RIF o nombre de la empresa"
+            placeholder="Código o nombre de la empresa"
             :loading="loading"
-            :infoTexts="[
-              'Puedes buscar por nombre',
-              'Puedes buscar por RIF',
-              'O buscar por código de la empresa',
-            ]"
+            :infoTexts="['Puedes buscar por nombre', 'Puedes buscar por código']"
+            @search="fetchData"
+            only-on-enter
           />
         </div>
 
@@ -238,8 +163,10 @@ watch(selectedState, () => {
             placeholder="Estado"
             helper-type="custom"
             variant="primary"
-            :custom-icon-map="customIconMapState"
-            :custom-description-map="customDescriptionMapState"
+            :custom-default-icon="customIconState"
+            :show-descriptions="false"
+            label-key="name"
+            track-by="id"
           />
         </div>
 
@@ -251,9 +178,11 @@ watch(selectedState, () => {
               placeholder="Ciudad"
               helper-type="custom"
               variant="primary"
-              :custom-icon-map="customIconMapCity"
-              :custom-description-map="customDescriptionMapCity"
+              :custom-default-icon="customIconCity"
+              :show-descriptions="false"
               :disabled="!selectedState"
+              label-key="name"
+              track-by="id"
             />
             <span
               v-if="selectedState && !selectedCity"
@@ -267,7 +196,7 @@ watch(selectedState, () => {
         <div
           class="col-12 col-md d-flex flex-md-row gap-2 align-items-stretch align-items-md-end justify-content-md-end mt-1 mt-md-0"
         >
-          <FetchButton @fetch="fetchData" />
+          <FetchButton @fetch="clearFilters" />
           <RedirectButton
             :tooltip-title="BUTTONS_TOOLTIPS.pharmacy.tooltipTitle"
             @redirect="goToNew"
@@ -282,7 +211,7 @@ watch(selectedState, () => {
         }"
       >
         <CustomTable
-          :data="concessionaires"
+          :data="pharmacies"
           :headers="TABLE_HEADERS.pharmacy"
           :actions="getTableActions"
           :is-loading="loading"
@@ -293,25 +222,11 @@ watch(selectedState, () => {
           @change-page="handleTablePagination"
           @action-click="handleTableAction"
         >
-          <template #cell(url_image)="{ value }">
-            <img
-              :src="value || defaultProfileImage"
-              :alt="value || 'imagen'"
-              class="img-fluid object-fit-cover rounded-pill"
-              style="width: 50px; height: 50px"
-              @error="(e: Event) => ((e.target as HTMLImageElement).src = defaultProfileImage)"
-            />
+          <template #cell(url_image_light)="{ value }">
+            <AppImage :src="value" type="entity" width="50px" height="50px" />
           </template>
           <template #cell(active)="{ value }">
             <StatusBadge :value="value" />
-          </template>
-          <template #cell(ubication)="{ item }">
-            <button
-              class="btn btn-sm btn-primary border-0 rounded-pill"
-              @click="showAddressInfo(item)"
-            >
-              <i class="bi bi-geo-alt-fill"></i>
-            </button>
           </template>
         </CustomTable>
       </div>
