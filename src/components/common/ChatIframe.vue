@@ -1,5 +1,5 @@
 <template>
-  <div v-if="iframeUrl" class="w-100 h-100 flex-grow-1">
+  <div v-if="iframeUrl" class="w-100 h-100 flex-grow-1 d-flex flex-column">
     <iframe
       :src="iframeUrl"
       allow="microphone"

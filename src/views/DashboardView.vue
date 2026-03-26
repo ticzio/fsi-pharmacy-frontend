@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import TitleSection from '@/components/common/titleSection.vue'
 import StatisticCards from '@/components/Home/StatisticCards.vue'
@@ -17,8 +18,11 @@ const statisticItems = ref<StatisticItem[]>([
 
 const { chartSeries, chartOptions } = useDashboardCharts()
 
+const store = useStore()
 const router = useRouter()
 const isRedirecting = ref(false)
+
+const pharmacyName = computed(() => store.getters.currentUser?.type_pharmacy?.name || '')
 
 const handleCardClick = async (item: StatisticItem) => {
   if (item.to) {
@@ -41,7 +45,7 @@ const handleCardClick = async (item: StatisticItem) => {
       <!-- HEADER -->
       <TitleSection
         title="Bienvenido"
-        description="Panel de farmacias San Ignacio"
+        :description="`Panel de farmacia ${pharmacyName}`"
         :show-logo="true"
       />
 

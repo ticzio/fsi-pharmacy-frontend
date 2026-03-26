@@ -26,6 +26,7 @@ const RESOURCES = {
   benefit: 'benefit',
   mission: 'mission',
   appUbication: 'app_ubication',
+  coupon_client: 'coupon_client',
   template_message: 'message_template',
 }
 

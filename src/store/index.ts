@@ -127,10 +127,13 @@ const store = createStore({
           .then((response) => {
             if (response.data.code === 200) {
               const userData = response.data.data
-              setCookie('fsi_pharmacy_token', userData.token)
+              setCookie('fsi_pharmacy_token', userData.auth.token)
               setCookie('fsi_pharmacy_full_name', userData.full_name)
               setCookie('fsi_pharmacy_id_user', userData.id)
               setCookie('fsi_pharmacy_code_user', userData.code)
+              setCookie('fsi_pharmacy_id_pharmacy', userData.type_pharmacy.id_pharmacy)
+              setCookie('fsi_pharmacy_name_pharmacy', userData.type_pharmacy.name)
+              setCookie('fsi_pharmacy_code_pharmacy', userData.type_pharmacy.code_pharmacy)
               const id_role_hashing = btoa(userData.id_type_rol_user.toString())
               setCookie('fsi_pharmacy_id_role', id_role_hashing)
 
@@ -162,6 +165,9 @@ const store = createStore({
       removeCookie('fsi_pharmacy_url_image')
       removeCookie('fsi_pharmacy_code_user')
       removeCookie('fsi_pharmacy_id_user')
+      removeCookie('fsi_pharmacy_name_pharmacy')
+      removeCookie('fsi_pharmacy_code_pharmacy')
+      removeCookie('fsi_pharmacy_id_pharmacy')
 
       resetAuthRole()
 

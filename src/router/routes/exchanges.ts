@@ -3,7 +3,7 @@ export default [
   {
     path: '/exchanges',
     name: 'Canjes',
-    component: () => import('../../views/exchanges/List.vue'),
+    component: () => import('../../views/exchanges/New.vue'),
     meta: { requiresAuth: true },
   },
 ]

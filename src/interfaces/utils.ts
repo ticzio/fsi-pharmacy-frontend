@@ -7,9 +7,19 @@ export interface IDashboardStats {
 
 export interface User {
   id: number
-  name: string
+  full_name: string
   email: string
-  role: string
+  code: string
+  id_type_rol_user: number
+  url_image?: string
+  auth: {
+    token: string
+  }
+  type_pharmacy: {
+    id_pharmacy: number
+    name: string
+    code_pharmacy: string
+  }
 }
 
 export interface State {

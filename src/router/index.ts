@@ -6,6 +6,7 @@ import { roleHasAllPermissions } from '@/const/rolePermissions'
 import dashboardRoutes from './routes/dashboard'
 import couponsRoutes from './routes/exchanges'
 import settingsRoutes from './routes/settings'
+import chatsRoutes from './routes/chats'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,6 +23,7 @@ const router = createRouter({
     },
     ...dashboardRoutes,
     ...couponsRoutes,
+    ...chatsRoutes,
     // Catch-all 404 route (must be last)
     {
       path: '/:pathMatch(.*)*',

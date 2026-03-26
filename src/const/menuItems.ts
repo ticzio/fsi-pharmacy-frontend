@@ -13,6 +13,7 @@ export interface MenuItem {
 
 export const MENU_ITEMS: MenuItem[] = [
   { label: 'Inicio', to: '/dashboard', matchPath: '/dashboard' },
+  { label: 'Chats', to: '/chats', matchPath: '/chats' },
   { label: 'Canjes', to: '/exchanges', matchPath: '/exchanges' },
 ]
 
