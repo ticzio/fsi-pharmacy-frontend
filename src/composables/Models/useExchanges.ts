@@ -129,34 +129,20 @@ export function useExchanges() {
   /**
    * Guarda o actualiza un registro.
    */
-  const saveExchange = async (data: any, isEditing: boolean, id?: string | number) => {
+  const saveExchange = async (code: string, ci: string) => {
     loading.value = true
     try {
       const formData = new FormData()
-      formData.append('id_coupon_client', data.id_coupon_client)
-      formData.append('id_pharmacy', data.id_pharmacy)
-      formData.append('exchanged_at', data.exchanged_at)
-      formData.append('id_user', data.id_user)
-      formData.append('active', data.active ? '1' : '0')
+      formData.append('code', code)
+      formData.append('ci', ci)
 
-      let response: any
-      if (isEditing && id) {
-        response = await store.dispatch('updateData', {
-          url: URLS.exchange.update,
-          id: id,
-          data: formData,
-        })
-      } else {
-        response = await store.dispatch('createData', {
-          url: URLS.exchange.save,
-          data: formData,
-        })
-      }
+      const response: any = await store.dispatch('createData', {
+        url: URLS.exchange.save,
+        data: formData,
+      })
 
       if (response.code === 200 || response.code === 201) {
-        swalToast.showSuccess(
-          isEditing ? 'Registro actualizado correctamente' : 'Registro creado correctamente',
-        )
+        swal.showSuccess('Cupón canjeado correctamente')
         await getExchanges(pagination.currentPage, currentSearch.value)
         return true
       } else {
@@ -197,14 +183,18 @@ export function useExchanges() {
       })
       if (response.code === 200 || response.code === 201) {
         logger.logRequest(URLS.exchange.changeStatus, {}, response)
-        swalToast.showSuccess('Registro ' + (isActive ? 'desactivado' : 'activado') + ' exitosamente')
+        swalToast.showSuccess(
+          'Registro ' + (isActive ? 'desactivado' : 'activado') + ' exitosamente',
+        )
         await getExchanges(pagination.currentPage, currentSearch.value)
         return true
       }
       return false
     } catch (error: any) {
       logger.logRequest(URLS.exchange.changeStatus, {}, error)
-      swalToast.showError(`${isActive ? ERROR.errorDeactive : ERROR.errorActive} canje ID: ${item.id}`)
+      swalToast.showError(
+        `${isActive ? ERROR.errorDeactive : ERROR.errorActive} canje ID: ${item.id}`,
+      )
       return false
     }
   }
@@ -244,6 +234,35 @@ export function useExchanges() {
     }
   }
 
+  /**
+   * Consulta la información del cupón de un cliente.
+   */
+  const checkCoupon = async (code: string, ci: string) => {
+    loading.value = true
+    try {
+      const response: any = await store.dispatch('getData', {
+        url: 'coupon_client/check',
+        params: {
+          code,
+          ci,
+        },
+      })
+
+      if (response.code === 200 && response.data) {
+        return response.data
+      } else {
+        swalToast.showError(response.message || 'Cupón no encontrado o datos incorrectos')
+        return null
+      }
+    } catch (error: any) {
+      console.error('Error checking coupon:', error)
+      swalToast.showError(error.message || 'Error al validar el cupón')
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     exchanges,
@@ -256,5 +275,6 @@ export function useExchanges() {
     saveExchange,
     deactivateExchange,
     deleteExchange,
+    checkCoupon,
   }
 }

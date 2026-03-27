@@ -8,6 +8,7 @@ import SearchInput from '@/components/common/SearchInput.vue'
 import { useStore } from 'vuex'
 import { useExchanges } from '@/composables/Models/useExchanges'
 import { useSwalToast } from '@/composables/useSwalToast'
+import { useCookies } from '@/composables/useCookies'
 
 import { TITLE_SECTION_COMPONENT } from '@/const/tableConst'
 
@@ -26,11 +27,15 @@ const {
   pagination,
   getExchanges,
   saveExchange,
+  checkCoupon,
 } = useExchanges()
+
+const { getCookie } = useCookies()
+const idPharmacy = getCookie('fsi_pharmacy_id_pharmacy')
 
 // Search and Validation State
 const searchCode = ref('')
-const searchDNI = ref('')
+const searchCI = ref('')
 const isValidating = ref(false)
 const couponFound = ref<any>(null)
 const validationError = ref('')
@@ -40,7 +45,7 @@ const isCouponValid = computed(() => {
 })
 
 const validateCoupon = async () => {
-  if (!searchCode.value || !searchDNI.value) {
+  if (!searchCode.value || !searchCI.value) {
     swalToast.showError('Por favor ingrese el código y la cédula')
     return
   }
@@ -50,24 +55,12 @@ const validateCoupon = async () => {
   validationError.value = ''
 
   try {
-    // Intentamos buscar por código y filtrar por DNI del cliente
-    // Usamos el endpoint genérico de cupon_cliente si existe, o el de coupon con el query
-    const response: any = await store.dispatch('getData', {
-      url: 'coupon-client/check', // Asumimos este endpoint por la estructura del proyecto
-      params: {
-        code: searchCode.value,
-        dni: searchDNI.value,
-      },
-    })
-
-    if (response.code === 200 && response.data) {
-      couponFound.value = response.data
-    } else {
-      swalToast.showError('Cupón no encontrado o datos incorrectos')
+    const data = await checkCoupon(searchCode.value, searchCI.value)
+    if (data) {
+      couponFound.value = data
     }
   } catch (error: any) {
     console.error('Error validating coupon:', error)
-    swalToast.showError(error.message || 'Error al validar el cupón')
   } finally {
     isValidating.value = false
   }
@@ -76,26 +69,28 @@ const validateCoupon = async () => {
 const handleUseCoupon = async () => {
   if (!couponFound.value) return
 
-  const data = {
-    id_coupon_client: couponFound.value.id,
-    id_pharmacy: store.getters.currentUser?.id_pharmacy || 1, // Default o del usuario
-    exchanged_at: new Date().toISOString().split('T')[0],
-    id_user: store.getters.currentUser?.id,
-    active: 1,
-  }
-
-  const success = await saveExchange(data, false)
+  const success = await saveExchange(searchCode.value, searchCI.value)
   if (success) {
     couponFound.value = null
     searchCode.value = ''
-    searchDNI.value = ''
+    searchCI.value = ''
     fetchRecentActivity()
   }
 }
 
 const fetchRecentActivity = () => {
-  getExchanges(1, '')
+  getExchanges(1, '', idPharmacy)
 }
+
+const recentExchanges = computed(() => {
+  if (Array.isArray(exchanges.value)) {
+    return exchanges.value
+  }
+  if (exchanges.value && typeof exchanges.value === 'object' && Array.isArray((exchanges.value as any).data)) {
+    return (exchanges.value as any).data
+  }
+  return []
+})
 
 onMounted(() => {
   fetchRecentActivity()
@@ -130,8 +125,8 @@ onMounted(() => {
           <div class="col-12 col-md-4">
             <h6 class="fw-bold mb-3 text-dark">Cédula del cliente</h6>
             <SearchInput
-              id="client-dni"
-              v-model="searchDNI"
+              id="client-ci"
+              v-model="searchCI"
               placeholder="Ingrese la cédula"
               :loading="isValidating"
               :only-on-enter="true"
@@ -172,17 +167,17 @@ onMounted(() => {
               <div class="details-list d-flex flex-column gap-3 mb-4">
                 <div class="detail-item">
                   <span class="text-muted d-block small">Cliente:</span>
-                  <span class="fw-bold text-dark">{{
-                    couponFound.id_client?.full_name || 'N/A'
-                  }}</span>
+                  <span class="fw-bold text-dark">{{ couponFound.client.full_name || 'N/A' }}</span>
                 </div>
                 <div class="detail-item">
                   <span class="text-muted d-block small">Beneficio:</span>
-                  <span class="fw-bold text-dark">{{ couponFound.id_coupon?.name || 'N/A' }}</span>
+                  <span class="fw-bold text-dark">{{
+                    couponFound.benefit?.body_only_text || 'N/A'
+                  }}</span>
                 </div>
                 <div class="detail-item">
                   <span class="text-muted d-block small">Fecha de expiración:</span>
-                  <span class="fw-bold text-dark">{{ couponFound.expires_at || 'Consultar' }}</span>
+                  <span class="fw-bold text-dark">{{ couponFound.coupon?.finish_date || couponFound.expires_at || 'Consultar' }}</span>
                 </div>
               </div>
 
@@ -210,15 +205,15 @@ onMounted(() => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="item in (exchanges as any[]).slice(0, 5)" :key="item.id">
-                      <td class="fw-bold text-dark">{{ item.id_coupon_client?.code || '-' }}</td>
+                    <tr v-for="item in recentExchanges.slice(0, 5)" :key="item.id">
+                      <td class="fw-bold text-dark">{{ item.coupon?.code || item.id_coupon_client?.code || '-' }}</td>
                       <td class="text-muted">
-                        {{ item.id_coupon_client?.id_coupon?.name || 'Canje' }}
+                        {{ item.benefit?.body_only_text || 'Canje' }}
                       </td>
                       <td class="text-muted">{{ item.exchanged_at }}</td>
                       <td class="fw-bold">{{ item.id_pharmacy?.name || 'Sede' }}</td>
                     </tr>
-                    <tr v-if="exchanges.length === 0">
+                    <tr v-if="recentExchanges.length === 0">
                       <td colspan="4" class="text-center py-4 text-muted">
                         No hay actividad reciente
                       </td>
@@ -326,7 +321,6 @@ onMounted(() => {
   max-width: 300px;
   filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.1));
 }
-
 
 .fallback-section:hover .bi-search-heart {
   opacity: 0.5 !important;
