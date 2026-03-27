@@ -61,20 +61,7 @@ const props = defineProps<{
             placeholder="Ej. 04141234567"
           />
         </div>
-        <div class="col-12 col-md-12" v-if="roleOptions && roleOptions.length > 0">
-          <MultiselectCustom
-            v-model="form.role_id"
-            :options="roleOptions"
-            label="Rol del Operador *"
-            placeholder="Selecciona el rol"
-            labelKey="name"
-            trackBy="id"
-            :showIcons="true"
-            helperType="custom"
-            customDefaultIcon="bi bi-person-badge"
-            :clearable="true"
-          />
-        </div>
+
         <!-- Contraseñas: Usamos autoComplete 'new-password' recomendado en las conversaciones previas para prevenir autocompletado en esta app -->
         <div class="col-12 col-md-6">
           <BaseInput

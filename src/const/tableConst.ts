@@ -148,11 +148,12 @@ export const TABLE_HEADERS = {
   ],
   exchanges: [
     ...maybeId('id'),
-    { key: 'id_coupon_client.code', label: 'Código Cupón' },
+    { key: 'coupon_client.coupon.code', label: 'Código Cupón' },
     { key: 'id_pharmacy.name', label: 'Farmacia' },
 
-    { key: 'id_user.full_name', label: 'Operador' },
+    { key: 'id_users.full_name', label: 'Operador' },
     { key: 'exchanged_at', label: 'Fecha de Canje' },
+    { key: 'created_at', label: 'Hora del canje' },
   ],
 
   exchangesClient: [

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useMoment } from '@/composables/useMoment'
+import CustomCard from '@/components/common/CustomCard.vue'
 
 const props = defineProps<{
   exchange: any
@@ -9,7 +10,7 @@ const props = defineProps<{
 const { getMoment } = useMoment()
 
 // Data extraction with safe navigation
-const operatorName = computed(() => props.exchange?.id_user?.full_name || 'N/A')
+const operatorName = computed(() => props.exchange?.id_users?.full_name || 'N/A')
 const exchangeDate = computed(() => {
   const date = props.exchange?.exchanged_at
   return date ? getMoment(date).format('DD/MM/YYYY') : 'N/A'
@@ -18,67 +19,69 @@ const exchangeTime = computed(() => {
   const date = props.exchange?.exchanged_at
   return date ? getMoment(date).format('h:mm a') : 'N/A'
 })
-const clientName = computed(() => props.exchange?.id_coupon_client?.id_client?.full_name || 'N/A')
-const clientDni = computed(() => props.exchange?.id_coupon_client?.id_client?.dni || 'N/A')
-const benefit = computed(() => props.exchange?.id_coupon_client?.id_coupon?.name || 'N/A')
-const levelName = computed(() => props.exchange?.id_coupon_client?.id_coupon?.id_level?.name || 'N/A')
+const clientName = computed(() => props.exchange?.coupon_client?.client?.full_name || 'N/A')
+const clientDni = computed(() => props.exchange?.coupon_client?.client?.ci || 'N/A')
+const benefit = computed(() => props.exchange?.coupon_client?.coupon?.name || 'N/A')
+const levelName = computed(() => props.exchange?.coupon_client?.coupon?.id_levels?.name || 'N/A')
 const pharmacyName = computed(() => props.exchange?.id_pharmacy?.name || 'N/A')
-const couponCode = computed(() => props.exchange?.id_coupon_client?.code || '-')
+const couponCode = computed(() => props.exchange?.coupon_client?.coupon?.code || '-')
 
 // Coupon Preview Data
-const couponName = computed(() => props.exchange?.id_coupon_client?.id_coupon?.name || 'Cupón')
-const couponDesc = computed(() => props.exchange?.id_coupon_client?.id_coupon?.description || '')
-const couponImage = computed(() => props.exchange?.id_coupon_client?.id_coupon?.url_img)
+const couponName = computed(() => props.exchange?.coupon_client?.coupon?.name || 'Cupón')
+const couponDesc = computed(() => props.exchange?.coupon_client?.coupon?.description || '')
+const couponImage = computed(() => props.exchange?.coupon_client?.coupon?.url_img)
+const startDate = computed(() => props.exchange?.coupon_client?.coupon?.start_date || '-')
+const finishDate = computed(() => props.exchange?.coupon_client?.coupon?.finish_date || '-')
 
 // Flexibility for extra data
 const extraData = computed(() => {
-  // Extract fields that are not already handled
+  // Extract fields that are not already handled in the direct list
   const handledKeys = [
-    'id', 'id_user', 'exchanged_at', 'id_coupon_client', 'id_pharmacy', 'active', 'timestamp'
+    'id',
+    'id_user',
+    'exchanged_at',
+    'id_coupon_client',
+    'id_pharmacy',
+    'active',
+    'timestamp',
+    'id_users',
+    'coupon_client',
+    // also exclude specific nested objects if they appear as keys
+    'operator',
+    'pharmacy',
   ]
   return Object.entries(props.exchange || {})
-    .filter(([key]) => !handledKeys.includes(key))
+    .filter(([key, value]) => !handledKeys.includes(key) && typeof value !== 'object')
     .map(([key, value]) => ({ key, value }))
 })
 </script>
 
 <template>
   <div class="redeemed-coupon-detail p-3">
-    <h4 class="fw-bold mb-4 text-dark">Detalle de canje</h4>
-
     <div class="row g-4 align-items-center">
       <!-- Columna Izquierda: Tarjeta de Cupón -->
       <div class="col-12 col-md-5">
-        <div class="coupon-preview-card bg-white rounded-4 shadow-sm border p-3 h-100 position-relative">
-          <div class="d-flex align-items-start mb-3">
-            <div class="coupon-icon-box bg-primary rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center text-white me-3" style="width: 70px; height: 70px;">
-              <template v-if="couponImage">
-                <img :src="couponImage" class="w-100 h-100 object-fit-cover rounded-3" alt="Coupon">
-              </template>
-              <template v-else>
-                <div class="text-center lh-1">
-                  <div class="fw-bold small">DCTO</div>
-                  <div class="fw-bold h4 mb-0">30%</div>
-                  <div class="small" style="font-size: 0.6rem;">OFF</div>
-                </div>
-              </template>
+        <CustomCard
+          :item="{
+            name: couponName,
+            description: couponDesc,
+            url_img: couponImage,
+            start_date: startDate,
+            finish_date: finishDate,
+          }"
+        >
+          <template #footer>
+            <div class="d-flex justify-content-between align-items-center mt-auto w-100">
+              <div class="date-range small text-muted fw-medium">
+                {{ startDate }} - {{ finishDate }}
+              </div>
+              <div class="coupon-code-footer d-flex align-items-center">
+                <span class="text-muted small text-uppercase fw-bold me-2">COD:</span>
+                <span class="fw-bold text-dark">{{ couponCode }}</span>
+              </div>
             </div>
-            <div class="flex-grow-1 overflow-hidden">
-              <h6 class="fw-bold mb-1 text-truncate">{{ couponName }}</h6>
-              <p class="text-muted small mb-0 line-clamp-2">{{ couponDesc }}</p>
-            </div>
-            <div class="arrow-icon ms-2">
-              <i class="bi bi-arrow-right-circle fs-5 text-secondary"></i>
-            </div>
-          </div>
-          
-          <div class="divider border-bottom border-dashed my-3"></div>
-          
-          <div class="coupon-code-footer d-flex align-items-center">
-            <span class="text-muted small text-uppercase fw-bold me-2">CODIGO:</span>
-            <span class="fw-bold text-dark">{{ couponCode }}</span>
-          </div>
-        </div>
+          </template>
+        </CustomCard>
       </div>
 
       <!-- Columna Derecha: Información Detallada -->
@@ -116,21 +119,15 @@ const extraData = computed(() => {
             <span class="detail-label text-muted me-2">Sede:</span>
             <span class="detail-value fw-medium">{{ pharmacyName }}</span>
           </div>
-          
-          <!-- Flexibilidad para datos extra -->
-          <template v-if="extraData.length">
-            <div v-for="data in extraData" :key="data.key" class="detail-item mb-2 d-flex">
-              <span class="detail-label text-muted me-2 text-capitalize">{{ data.key.replace(/_/g, ' ') }}:</span>
-              <span class="detail-value fw-medium">{{ data.value }}</span>
-            </div>
-          </template>
         </div>
       </div>
     </div>
 
     <!-- Barra de Código Principal -->
     <div class="mt-5">
-      <div class="code-bar bg-success text-white text-center py-3 rounded-4 shadow-sm fw-bold h4 mb-0 letter-spacing-2">
+      <div
+        class="code-bar bg-success text-white text-center py-3 rounded-4 shadow-sm fw-bold h4 mb-0 letter-spacing-2"
+      >
         {{ couponCode }}
       </div>
     </div>

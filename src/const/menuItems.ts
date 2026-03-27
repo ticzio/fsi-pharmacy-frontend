@@ -15,6 +15,14 @@ export const MENU_ITEMS: MenuItem[] = [
   { label: 'Inicio', to: '/dashboard', matchPath: '/dashboard' },
   { label: 'Chats', to: '/chats', matchPath: '/chats' },
   { label: 'Canjes', to: '/exchanges', matchPath: '/exchanges' },
+  { label: 'Mis Cupones', to: '/coupons', matchPath: '/coupons', icon: 'bi bi-ticket-perforated' },
+  {
+    label: 'Historial de Canjes',
+    to: '/historical',
+    matchPath: '/historical',
+    icon: 'bi bi-clock-history',
+  },
+  { label: 'Mi Perfil', to: '/profile', matchPath: '/profile', icon: 'bi bi-person-circle' },
 ]
 
 /**

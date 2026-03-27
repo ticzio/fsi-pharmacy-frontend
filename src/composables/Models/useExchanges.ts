@@ -39,7 +39,7 @@ export function useExchanges() {
   /**
    * Obtiene la lista de canjes (exchanges) paginada y filtrada.
    */
-  const getExchanges = async (page = 1, search = '') => {
+  const getExchanges = async (page = 1, search = '', idPharmacy: string | number | null = null) => {
     currentSearch.value = search
     loading.value = true
     try {
@@ -49,6 +49,7 @@ export function useExchanges() {
           page: page,
           limit: pagination.limit,
           query: search || null,
+          id_pharmacy: idPharmacy || null,
           active: null,
         },
       })

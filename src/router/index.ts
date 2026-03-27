@@ -5,8 +5,9 @@ import { roleHasAllPermissions } from '@/const/rolePermissions'
 
 import dashboardRoutes from './routes/dashboard'
 import couponsRoutes from './routes/exchanges'
-import settingsRoutes from './routes/settings'
 import chatsRoutes from './routes/chats'
+import couponsListRoutes from './routes/coupons'
+import historicalRoutes from './routes/historical'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,6 +25,14 @@ const router = createRouter({
     ...dashboardRoutes,
     ...couponsRoutes,
     ...chatsRoutes,
+    ...couponsListRoutes,
+    ...historicalRoutes,
+    {
+      path: '/profile',
+      name: 'profile-edit',
+      component: () => import('../views/profile/Edit.vue'),
+      meta: { requiresAuth: true },
+    },
     // Catch-all 404 route (must be last)
     {
       path: '/:pathMatch(.*)*',
