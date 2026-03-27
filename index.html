@@ -25,39 +25,154 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #103560 0%, #1a4a7a 50%, #103560 100%);
+    background: linear-gradient(160deg, #0d2f6e 0%, #123e93 40%, #1a52b0 70%, #123e93 100%);
     font-family: 'Lexend Deca', sans-serif;
+    overflow: hidden;
   ">
-    <img src="/FSI-icon.png" alt="FSI"
-      style="width: 80px; height: 80px; margin-bottom: 24px; animation: pulse 1.5s ease-in-out infinite;" />
-    <div style="
-      width: 48px;
-      height: 48px;
-      border: 4px solid rgba(255,255,255,0.2);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    "></div>
-    <p style="color: #fff; margin-top: 20px; font-size: 1rem; opacity: 0.9;">Cargando dashboard...</p>
-  </div>
-  <style>
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
+    <!-- Floating ambient particles -->
+    <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden;">
+      <div
+        style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.04) 0%,transparent 70%);top:-80px;right:-60px;animation:float 8s ease-in-out infinite;">
+      </div>
+      <div
+        style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.03) 0%,transparent 70%);bottom:-40px;left:-30px;animation:float 10s ease-in-out infinite reverse;">
+      </div>
+      <div
+        style="position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.025) 0%,transparent 70%);top:50%;left:60%;animation:float 12s ease-in-out infinite 2s;">
+      </div>
+    </div>
 
-    @keyframes pulse {
+    <!-- Loader card -->
+    <div style="
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 56px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+    ">
+      <!-- Logo with glow -->
+      <div style="position:relative;margin-bottom:28px;">
+        <div style="
+          position: absolute;
+          inset: -16px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(26,82,176,0.5) 0%, transparent 70%);
+          animation: logoGlow 2.5s ease-in-out infinite;
+        "></div>
+        <img src="logo_fsi.png" alt="FSI" style="
+          position: relative;
+          width: 88px;
+          height: 88px;
+          filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+          animation: logoPulse 2.5s ease-in-out infinite;
+        " />
+      </div>
+
+      <!-- App title -->
+      <p style="
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        margin: 0 0 24px 0;
+        opacity: 0.95;
+      ">Cargando dashboard<span style="animation: dots 1.5s steps(4,end) infinite;">...</span></p>
+
+      <!-- Progress bar -->
+      <div style="
+        width: 200px;
+        height: 4px;
+        border-radius: 4px;
+        background: rgba(255,255,255,0.12);
+        overflow: hidden;
+      ">
+        <div style="
+          width: 40%;
+          height: 100%;
+          border-radius: 4px;
+          background: linear-gradient(90deg, rgba(255,255,255,0.6), #fff, rgba(255,255,255,0.6));
+          animation: progressSlide 1.6s ease-in-out infinite;
+        "></div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes logoPulse {
 
       0%,
       100% {
+        transform: scale(1);
         opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.04);
+        opacity: 0.9;
+      }
+    }
+
+    @keyframes logoGlow {
+
+      0%,
+      100% {
+        opacity: 0.5;
         transform: scale(1);
       }
 
       50% {
-        opacity: 0.7;
-        transform: scale(0.95);
+        opacity: 1;
+        transform: scale(1.15);
+      }
+    }
+
+    @keyframes progressSlide {
+      0% {
+        transform: translateX(-200%);
+      }
+
+      100% {
+        transform: translateX(600%);
+      }
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      33% {
+        transform: translate(15px, -20px) scale(1.05);
+      }
+
+      66% {
+        transform: translate(-10px, 10px) scale(0.95);
+      }
+    }
+
+    @keyframes dots {
+      0% {
+        content: '';
+      }
+
+      25% {
+        content: '.';
+      }
+
+      50% {
+        content: '..';
+      }
+
+      75% {
+        content: '...';
       }
     }
   </style>
