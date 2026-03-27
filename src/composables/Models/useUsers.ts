@@ -273,6 +273,51 @@ export function useUsers() {
     }
   }
 
+  /**
+   * Actualiza el perfil del usuario autenticado.
+   */
+  const updateProfile = async (data: UserInterface) => {
+    loading.value = true
+    try {
+      const formData = new FormData()
+      formData.append('first_name', data.first_name)
+      formData.append('last_name', data.last_name)
+      formData.append('email', data.email)
+      formData.append('phone', data.phone)
+
+      if (data.password) {
+        formData.append('password', data.password)
+        // If password_confirmation is not in UserInterface, cast to any
+        if ((data as any).password_confirmation) {
+          formData.append('password_confirmation', (data as any).password_confirmation)
+        }
+      }
+
+      if (data.url_image instanceof File) {
+        formData.append('url_image', data.url_image)
+      }
+
+      const response: any = await store.dispatch('updateDataNoId', {
+        url: 'auth/profile/update',
+        data: formData,
+      })
+
+      if (response.code === 200 || response.code === 201) {
+        swalToast.showSuccess('Perfil actualizado correctamente')
+        return true
+      } else {
+        swalToast.showError('Error al actualizar el perfil')
+        return false
+      }
+    } catch (error: any) {
+      console.error('Error updating profile:', error)
+      swalToast.showError('Error de red al actualizar el perfil')
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     users,
@@ -284,6 +329,7 @@ export function useUsers() {
     getUser,
     getRoles,
     saveUser,
+    updateProfile,
     deactivateUser,
     deleteUser,
   }

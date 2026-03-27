@@ -1,96 +1,155 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '@/components/DashboardLayout.vue'
-import TitleSection from '@/components/common/titleSection.vue'
-import SearchInput from '@/components/common/SearchInput.vue'
+import titleSection from '@/components/common/titleSection.vue'
 import CustomTable from '@/components/common/CustomTable.vue'
-import StatusBadge from '@/components/common/StatusBadge.vue'
+import SearchInput from '@/components/common/SearchInput.vue'
+import FetchButton from '@/components/common/FetchButton.vue'
+import Modal from '@/components/common/Modal.vue'
+import CouponForm from '@/components/Coupons/CouponForm.vue'
+
+//Composables
+import { useStore } from 'vuex'
 import { useCoupons } from '@/composables/Models/useCoupons'
 
-const { loading, coupons, pagination, getDataCoupons } = useCoupons()
+import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_ACTIONS } from '@/const/tableConst'
 
-const headers = [
-  { key: 'id', label: '#' },
-  { key: 'name', label: 'Cupón' },
-  { key: 'description', label: 'Descripción' },
-  { key: 'start_date', label: 'Inicio' },
-  { key: 'finish_date', label: 'Fin' },
-  { key: 'active', label: 'Estado' },
-]
-
-const searchTerm = ref('')
-
-const handleSearch = (term: string) => {
-  searchTerm.value = term
-  getDataCoupons(1, term)
+interface Item {
+  id: string | number
+  [key: string]: any
 }
 
-const handlePageChange = (page: number) => {
-  getDataCoupons(page, searchTerm.value)
+const store = useStore()
+const isMobile = computed(() => store.getters.isMobile)
+
+const {
+  loading,
+  coupons,
+  pagination,
+  getDataCoupons,
+  deactivateCoupon,
+  deleteCoupon,
+  paginationKey,
+} = useCoupons()
+
+const search = ref('')
+
+const couponModalDialog = ref<InstanceType<typeof Modal> | null>(null)
+const selectedCoupon = ref<Item | null>(null)
+const isModalReadOnly = ref(true)
+
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: Item }) => {
+  if (actionName === 'view' || actionName === 'edit') {
+    selectedCoupon.value = { ...item }
+    isModalReadOnly.value = actionName === 'view'
+    couponModalDialog.value?.openModal()
+  } else if (actionName === 'deactivate') {
+    await deactivateCoupon(item)
+  } else if (actionName === 'delete') {
+    await deleteCoupon(item)
+  }
+}
+
+const getTableActions = async () => {
+  return [TABLE_ACTIONS.edit, TABLE_ACTIONS.deactivate, TABLE_ACTIONS.delete]
+}
+
+const handleTablePagination = (page: number) => {
+  getDataCoupons(page, search.value)
+  store.dispatch('pagination/updatePagination', {
+    key: paginationKey,
+    currentPage: page,
+  })
+}
+
+const fetchData = () => {
+  getDataCoupons(1, search.value)
 }
 
 onMounted(() => {
-  getDataCoupons()
+  const savedPageGetter = store.getters['pagination/getPage']
+  const savedPage = savedPageGetter(paginationKey) || 1
+  getDataCoupons(savedPage, search.value)
 })
 </script>
 
 <template>
   <DashboardLayout>
-    <div class="container-fluid p-0 d-flex flex-column gap-4 h-100">
-      <TitleSection
-        title="Mis Cupones"
-        description="Gestiona los cupones disponibles para tus clientes"
+    <div class="d-flex flex-column h-100">
+      <titleSection
+        :title="TITLE_SECTION_COMPONENT.coupons.title"
+        :description="TITLE_SECTION_COMPONENT.coupons.description"
         :show-logo="true"
       />
-
-      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white flex-grow-1 d-flex flex-column overflow-hidden">
-        <div class="row mb-4">
-          <div class="col-12 col-md-5 col-lg-4">
-            <SearchInput
-              id="search-coupons"
-              v-model="searchTerm"
-              placeholder="Buscar cupones..."
-              @search="handleSearch"
-            />
-          </div>
+      <!-- Fila de filtros -->
+      <div class="row mb-4 align-items-end g-3">
+        <div class="col-12 col-md-4">
+          <SearchInput
+            id="coupons-search"
+            v-model="search"
+            label="Buscar por:"
+            placeholder="Código o nombre del cupón"
+            :loading="loading"
+            @keyup.enter="fetchData"
+            :infoTexts="['Puedes buscar por código', 'Puedes buscar por nombre del cupón']"
+          />
         </div>
 
-        <div class="flex-grow-1 overflow-hidden">
-          <CustomTable
-            :data="coupons"
-            :headers="headers"
-            :is-loading="loading"
-            :current-page="pagination.currentPage"
-            :total-pages="pagination.totalPages"
-            @change-page="handlePageChange"
-          >
-            <!-- Slot para el nombre -->
-            <template #cell(name)="{ value }">
-              <span class="fw-bold text-dark">{{ value }}</span>
-            </template>
-
-            <!-- Slot para el estado -->
-            <template #cell(active)="{ value }">
-              <StatusBadge :value="value" />
-            </template>
-          </CustomTable>
+        <div
+          class="col-12 col-md d-flex flex-md-row gap-2 align-items-stretch align-items-md-end justify-content-md-end mt-1 mt-md-0"
+        >
+          <FetchButton @fetch="fetchData" :loading="loading" />
         </div>
       </div>
+
+      <div
+        :class="{
+          'container-fluid mt-2 border rounded-4 flex-grow-1 d-flex flex-column p-0 bg-white overflow-hidden':
+            !isMobile,
+        }"
+      >
+        <CustomTable
+          :data="coupons"
+          :headers="TABLE_HEADERS.coupons"
+          :actions="getTableActions"
+          :is-loading="loading"
+          :current-page="pagination.currentPage"
+          :total-pages="pagination.totalPages"
+          :limit="pagination.limit"
+          :change-page="handleTablePagination"
+          @change-page="handleTablePagination"
+          @action-click="handleTableAction"
+        >
+          <template #cell(url_img)="{ value }">
+            <div class="d-flex align-items-center justify-content-center" style="height: 40px">
+              <img
+                :src="value"
+                alt="Coupon Image"
+                class="rounded-3 border"
+                style="height: 100%; object-fit: cover"
+                v-if="value"
+              />
+              <span class="text-muted" v-else>Sin imagen</span>
+            </div>
+          </template>
+          <template #cell(start_date)="{ value }">
+            <span v-format-date="value"></span>
+          </template>
+          <template #cell(finish_date)="{ value }">
+            <span v-format-date="value"></span>
+          </template>
+        </CustomTable>
+      </div>
+
+      <!-- Modal Detalles de Cupón -->
+      <Modal
+        id="couponDetailsModal"
+        ref="couponModalDialog"
+        :title="TITLE_SECTION_COMPONENT.coupons.details"
+        size="lg"
+      >
+        <CouponForm :initial-data="selectedCoupon" :read-only="isModalReadOnly" />
+      </Modal>
     </div>
   </DashboardLayout>
 </template>
-
-<style scoped>
-.container-fluid {
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.card {
-  border-radius: 20px !important;
-}
-</style>

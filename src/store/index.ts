@@ -72,12 +72,6 @@ const store = createStore({
           .catch((error) => reject(error?.response?.data || error))
       })
     },
-    /**
-     * updateData
-     * Uso:
-     *   this.$store.dispatch('updateData', { url: 'ruta', id: 123, data: { ... } })
-     *   // Retorna una promesa con la respuesta
-     */
     updateData(
       { commit }: { commit: Function },
       form: { url: string; id: string | number; data: any },
@@ -85,6 +79,20 @@ const store = createStore({
       return new Promise((resolve, reject) => {
         apiClient
           .put('/' + form.url + '/' + form.id, form.data)
+          .then((response) => resolve(response.data))
+          .catch((error) => reject(error?.response?.data || error))
+      })
+    },
+    /**
+     * updateDataNoId
+     * Uso:
+     *   this.$store.dispatch('updateDataNoId', { url: 'ruta', data: { ... } })
+     *   // Retorna una promesa con la respuesta sin concatenar ID al final
+     */
+    updateDataNoId({ commit }: { commit: Function }, form: { url: string; data: any }) {
+      return new Promise((resolve, reject) => {
+        apiClient
+          .put('/' + form.url, form.data)
           .then((response) => resolve(response.data))
           .catch((error) => reject(error?.response?.data || error))
       })

@@ -71,11 +71,9 @@ import TitleSection from '@/components/common/titleSection.vue'
 import OperatorForm from '@/components/Operators/OperatorForm.vue'
 import dashboardLayout from '@/components/DashboardLayout.vue'
 
-const { getUser, saveUser, getRoles, roles, loading } = useUsers()
+const { getUser, updateProfile, getRoles, roles, loading } = useUsers()
 const store = useStore()
 const { getCookie } = useCookies()
-
-const userId = getCookie('fsi_pharmacy_id_user')
 
 const form = ref<any>({
   id: '',
@@ -119,11 +117,9 @@ onMounted(async () => {
  * Lógica para actualizar el perfil
  */
 const handleUpdate = async () => {
-  if (!userId) return
-
-  const success = await saveUser(form.value, true, userId)
+  const success = await updateProfile(form.value)
   if (success) {
-    // El composable useUsers ya maneja el SweetAlert de éxito.
+    // El composable useUsers ya maneja el SweetAlert de éxito con updateProfile.
     // Podríamos limpiar las contraseñas después de un cambio exitoso.
     form.value.password = ''
     form.value.password_confirmation = ''
