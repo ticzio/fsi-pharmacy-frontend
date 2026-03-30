@@ -190,7 +190,7 @@ const handleLogout = async () => {
 <style scoped>
 .dashboard-layout {
   display: flex;
-  height: 100vh;
+  height: var(--app-vh);
   width: 100%;
   min-width: 0;
   overflow: hidden;
@@ -216,7 +216,7 @@ const handleLogout = async () => {
   position: fixed;
   left: -280px;
   top: 0;
-  height: 100vh;
+  height: var(--app-vh);
   width: 280px;
   z-index: 1102; /* Above overlay */
   background-color: #123e93; /* Same blue for mobile */
@@ -240,7 +240,7 @@ const handleLogout = async () => {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: var(--app-vh);
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
   z-index: 1100;
@@ -315,7 +315,7 @@ const handleLogout = async () => {
   flex: 1 1 0%;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: var(--app-vh);
   min-width: 0;
   transition: all 0.3s ease;
 }

@@ -50,13 +50,56 @@ $input-border-width: 2px;
     )
 );
 
-html {
+// ─── Zoom Global System ─────────────────────────────────────────────────────
+:root {
+  --app-zoom: 1;
+  --app-vh: 100vh;
+}
+
+// Desktop: apply 75% zoom to the #app container only
+@media (min-width: 1025px) {
+  :root {
+    --app-zoom: 0.75;
+    --app-vh: calc(100vh / 0.75);
+  }
+}
+
+// Keep html & body as the clean, unscaled canvas
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
 }
 
 body {
   font-family: 'Lexend Deca', sans-serif;
 }
+
+// Mount point: apply the zoom only here
+#app {
+  zoom: var(--app-zoom);
+  width: 100%;
+  height: var(--app-vh);
+  overflow: hidden;
+}
+
+// Override Bootstrap .vh-100 / .min-vh-100 to use the compensated variable
+.vh-100 {
+  height: var(--app-vh) !important;
+}
+.min-vh-100 {
+  min-height: var(--app-vh) !important;
+}
+
+// Compensate Bootstrap modals & backdrops (injected into <body>, outside #app)
+.modal,
+.modal-backdrop {
+  zoom: var(--app-zoom);
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 [data-title]:hover:after {
   opacity: 1;

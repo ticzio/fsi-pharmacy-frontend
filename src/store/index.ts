@@ -153,7 +153,7 @@ const store = createStore({
               resetAuthRole()
               resolve(response.data)
             } else {
-              reject(new Error(response.data.message || 'Error al iniciar sesión'))
+              reject(response.data)
             }
           })
           .catch((error) => {
