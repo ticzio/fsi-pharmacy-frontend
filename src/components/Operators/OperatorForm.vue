@@ -19,6 +19,7 @@ const props = defineProps<{
         :round="true"
         placeholder="Haz click o arrastra una imagen"
         accepted-formats="image/png, image/jpeg, image/jpg"
+        :rules="[(v) => !!v || 'La imagen es obligatoria']"
       />
     </div>
 
@@ -59,6 +60,7 @@ const props = defineProps<{
             v-model="form.phone"
             label="Teléfono"
             placeholder="Ej. 04141234567"
+            :rules="[(v) => !!v || 'El teléfono es obligatorio']"
           />
         </div>
 

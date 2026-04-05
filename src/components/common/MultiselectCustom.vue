@@ -8,7 +8,8 @@
     <div class="multiselect-container">
       <Multiselect
         :model-value="modelValue"
-        @update:model-value="$emit('update:modelValue', $event)"
+        @update:model-value="handleUpdate"
+        @close="handleClose"
         :options="options"
         :placeholder="placeholder"
         :track-by="defaultProps.trackBy"
@@ -18,7 +19,11 @@
         :searchable="defaultProps.searchable"
         :allow-empty="defaultProps.allowEmpty"
         :multiple="multiple"
-        :class="[defaultClasses.container, variant ? `multiselect-${variant}` : '']"
+        :class="[
+          defaultClasses.container,
+          variant ? `multiselect-${variant}` : '',
+          { 'is-invalid': internalErrors.length > 0 },
+        ]"
         v-bind="$attrs"
       >
         <!-- Slot para opciones personalizadas -->
@@ -64,10 +69,26 @@
         </button>
       </transition>
     </div>
+
+    <!-- Errors -->
+    <transition name="fade">
+      <div v-if="internalErrors.length > 0" class="errors-wrapper w-100 mt-1">
+        <div class="errors-wrapper-inner">
+          <transition-group
+            name="list"
+            tag="div"
+            class="invalid-feedback d-block mt-0 errors-container"
+          >
+            <div v-for="error in internalErrors" :key="error" class="error-item">• {{ error }}</div>
+          </transition-group>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import Multiselect from 'vue-multiselect'
 import { useMultiselectDefaults, useRoleHelpers } from '@/composables/useMultiselect'
 
@@ -90,6 +111,7 @@ interface Props {
   label?: string
   /** Show an animated × button to clear the selection */
   clearable?: boolean
+  rules?: Array<(val: any) => string | boolean>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -102,6 +124,7 @@ const props = withDefaults(defineProps<Props>(), {
   helperType: 'roles',
   label: '',
   clearable: false,
+  rules: () => [],
 })
 
 const emit = defineEmits<{
@@ -112,9 +135,49 @@ const emit = defineEmits<{
 
 const { defaultProps, defaultClasses } = useMultiselectDefaults()
 
+const internalErrors = ref<string[]>([])
+
+const validate = (value: any) => {
+  if (!props.rules || props.rules.length === 0) {
+    internalErrors.value = []
+    return true
+  }
+
+  const errors: string[] = []
+  for (const rule of props.rules) {
+    const result = rule(value)
+    if (typeof result === 'string') {
+      errors.push(result)
+    } else if (result === false) {
+      errors.push('Campo inválido')
+    }
+  }
+  internalErrors.value = errors
+  return errors.length === 0
+}
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (internalErrors.value.length > 0) {
+      validate(newVal)
+    }
+  },
+)
+
+const handleUpdate = (value: any) => {
+  emit('update:modelValue', value)
+  validate(value)
+}
+
+const handleClose = () => {
+  validate(props.modelValue)
+}
+
 const handleClear = () => {
   emit('update:modelValue', null)
   emit('clear')
+  validate(null)
 }
 
 // Configurar helpers según el tipo
@@ -169,7 +232,7 @@ const getDescription = (key: string, option?: any): string => {
 
 .multiselect-clear-btn {
   position: absolute;
-  right: 2.5rem; /* sits just before the caret arrow */
+  right: 3rem; /* sits just before the caret arrow (which is now 3rem wide) */
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -205,5 +268,87 @@ const getDescription = (key: string, option?: any): string => {
 .ms-fade-leave-to {
   opacity: 0;
   transform: scale(0.95) translateY(-50%);
+}
+
+/* BaseInput error styles */
+.invalid-feedback {
+  font-size: 0.875em;
+  color: #dc3545;
+}
+
+.errors-wrapper {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.errors-wrapper-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.errors-container {
+  max-height: 3.2em;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: #fca5a5 #f9fafb;
+  padding-right: 4px;
+}
+
+.errors-container::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 6px;
+}
+.errors-container::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 4px;
+}
+.errors-container::-webkit-scrollbar-thumb {
+  background-color: #fca5a5;
+  border-radius: 4px;
+  border: 1px solid #f9fafb;
+}
+
+.error-item {
+  line-height: 1.4em;
+  margin-bottom: 4px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  overflow: hidden;
+  max-height: 5em;
+}
+.error-item:last-child {
+  margin-bottom: 0;
+}
+
+.multiselect-container :deep(.is-invalid) {
+  border: 1px solid #dc3545 !important;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+  grid-template-rows: 0fr;
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+  max-height: 0;
+  margin-bottom: 0;
 }
 </style>

@@ -7,13 +7,15 @@
         type="text"
         class="form-control border-radius-right border-radius-left"
         :class="{
-          'is-valid': hasValidCoords,
-          'is-invalid': isDirty && modelValue && !hasValidCoords,
+          'is-valid': hasValidCoords && internalErrors.length === 0,
+          'is-invalid':
+            (isDirty && modelValue && !hasValidCoords) || errorMessage || internalErrors.length > 0,
         }"
         v-model="inputValue"
         :placeholder="placeholder"
         :disabled="disabled"
         aria-describedby="error-feedback"
+        @blur="handleBlur"
       />
       <button
         class="btn btn-outline-secondary"
@@ -40,6 +42,19 @@
     <div v-if="errorMessage" id="error-feedback" class="invalid-feedback d-block">
       {{ errorMessage }}
     </div>
+    <transition name="fade">
+      <div v-if="internalErrors.length > 0 && !errorMessage" class="errors-wrapper">
+        <div class="errors-wrapper-inner">
+          <transition-group
+            name="list"
+            tag="div"
+            class="invalid-feedback d-block mt-1 errors-container"
+          >
+            <div v-for="error in internalErrors" :key="error" class="error-item">• {{ error }}</div>
+          </transition-group>
+        </div>
+      </div>
+    </transition>
     <!-- Sección para generar y copiar el código embed (reactiva) -->
     <div v-if="embedCode" class="embed-section mt-2">
       <!-- <label class="form-label mb-1">Código embed</label>
@@ -81,12 +96,14 @@ const props = withDefaults(
     label?: string // Etiqueta opcional para el input
     placeholder?: string // Placeholder para el input
     disabled?: boolean // Para deshabilitar el componente
+    rules?: Array<(val: any) => string | boolean>
   }>(),
   {
     label: 'Ubicación de Google Maps',
     placeholder: 'Pega el enlace de Google Maps aquí...',
     disabled: false,
-  }
+    rules: () => [],
+  },
 )
 
 const emit = defineEmits<{
@@ -102,6 +119,31 @@ const hasValidCoords = ref<boolean>(false)
 const lastCoords = ref<{ latitude: string; longitude: string } | null>(null)
 const showPreview = ref<boolean>(false)
 const inputId = `location-input-${Math.random().toString(36).substring(2, 9)}`
+const internalErrors = ref<string[]>([])
+
+const validate = (value: any) => {
+  if (!props.rules || props.rules.length === 0) {
+    internalErrors.value = []
+    return true
+  }
+
+  const errors: string[] = []
+  for (const rule of props.rules) {
+    const result = rule(value)
+    if (typeof result === 'string') {
+      errors.push(result)
+    } else if (result === false) {
+      errors.push('Campo inválido')
+    }
+  }
+  internalErrors.value = errors
+  return errors.length === 0
+}
+
+const handleBlur = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  validate(target.value)
+}
 
 // --- MANEJADORES DE EVENTOS Y LÓGICA ---
 
@@ -113,7 +155,7 @@ const extractCoordinates = (url: string): { latitude: number; longitude: number 
 
     // 1) Buscar coordenadas específicas al final de la URL (formato !3m3!8m2!3d10.0158333!4d-69.2187778)
     const finalCoordinatesMatch = cleanedUrl.match(
-      /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)[^!3d]*(?:$|\?|&)/
+      /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)[^!3d]*(?:$|\?|&)/,
     )
     if (finalCoordinatesMatch) {
       return {
@@ -215,6 +257,8 @@ const inputValue = computed<string>({
     isDirty.value = true
     emit('update:modelValue', safeVal)
 
+    validate(safeVal)
+
     const cleaned = safeVal.trim()
 
     // Si el input queda vacío, limpiar también las coordenadas en el padre
@@ -270,7 +314,7 @@ const embedSrc = computed(() => {
   const lng = lastCoords.value.longitude
   // Usamos maps?q=...&output=embed para un embed sencillo
   return `https://maps.google.com/maps?q=${encodeURIComponent(lat)},${encodeURIComponent(
-    lng
+    lng,
   )}&hl=es&z=15&output=embed`
 })
 
@@ -310,6 +354,10 @@ watch(
     inputValueRef.value = val || ''
     const cleaned = (val || '').trim()
 
+    if (internalErrors.value.length > 0) {
+      validate(val)
+    }
+
     if (!cleaned) {
       errorMessage.value = null
       hasValidCoords.value = false
@@ -343,12 +391,88 @@ watch(
       lastCoords.value = null
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
 <style scoped>
 .location-extractor-container {
   margin-bottom: 1rem;
+}
+
+.errors-wrapper {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.errors-wrapper-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.errors-container {
+  max-height: 3.2em; /* Muestra hasta 2 errores cómodamente */
+  overflow-y: scroll; /* Fuerza la barra de scroll a estar visible si se excede el alto */
+  /* Fallback para Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #fca5a5 #f9fafb;
+  padding-right: 4px;
+}
+
+/* Forzar Webkit (Chrome/Safari/Edge/MacOS) a mostrar el scroll siempre */
+.errors-container::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 6px;
+}
+.errors-container::-webkit-scrollbar-track {
+  background: #f9fafb; /* Fondo muy gris claro para que el track exista visualmente */
+  border-radius: 4px;
+}
+.errors-container::-webkit-scrollbar-thumb {
+  background-color: #fca5a5; /* Color del scrollbar rojo tenue */
+  border-radius: 4px;
+  border: 1px solid #f9fafb; /* Pequeño borde para separarlo del track */
+}
+
+.error-item {
+  line-height: 1.4em;
+  margin-bottom: 4px;
+  word-break: break-word; /* Rompe palabras extra largas que no tienen espacios */
+  overflow-wrap: break-word; /* Asegura el salto de línea al llegar al borde */
+  white-space: normal; /* Asegura que el texto respete los bordes de la caja */
+  overflow: hidden;
+  max-height: 5em;
+}
+.error-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Transición del bloque de errores completo */
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+  grid-template-rows: 0fr;
+}
+
+/* Transición individual de los errores al agregarse o quitarse */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+  max-height: 0;
+  margin-bottom: 0;
 }
 </style>
