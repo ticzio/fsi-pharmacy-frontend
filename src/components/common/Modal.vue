@@ -66,46 +66,42 @@ defineExpose({ openModal, closeModal })
 </script>
 
 <template>
-  <div
-    class="modal fade"
-    :id="id"
-    ref="modalRef"
-    data-bs-backdrop="static"
-    data-bs-keyboard="false"
-    tabindex="-1"
-    :aria-labelledby="`${id}Label`"
-    aria-hidden="true"
-  >
+  <Teleport to="body">
     <div
-      class="modal-dialog modal-dialog-centered"
-      :class="[sizeClass, { 'modal-dialog-scrollable': scrollable }]"
+      class="modal fade"
+      :id="id"
+      ref="modalRef"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      :aria-labelledby="`${id}Label`"
+      aria-hidden="true"
     >
-      <div class="modal-content border-0 shadow-lg rounded-4" :class="background">
-        <div class="modal-header border-bottom-0 pb-0">
-          <h5 class="modal-title fw-bold" :id="`${id}Label`" v-if="title">
-            {{ title }}
-          </h5>
-          <slot name="header"></slot>
-          <button
-            type="button"
-            class="btn-close shadow-none"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div class="modal-body p-4 pt-3">
-          <slot></slot>
-        </div>
-        <div class="modal-footer border-top-0 pt-0" v-if="$slots.footer">
-          <slot name="footer"></slot>
+      <div
+        class="modal-dialog modal-dialog-centered"
+        :class="[sizeClass, { 'modal-dialog-scrollable': scrollable }]"
+      >
+        <div class="modal-content border-0 shadow-lg rounded-4" :class="background">
+          <div class="modal-header border-bottom-0 pb-0">
+            <h5 class="modal-title fw-bold fs-4" :id="`${id}Label`" v-if="title">
+              {{ title }}
+            </h5>
+            <slot name="header"></slot>
+            <button
+              type="button"
+              class="btn-close shadow-none"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body p-4 pt-3">
+            <slot></slot>
+          </div>
+          <div class="modal-footer border-top-0 pt-0" v-if="$slots.footer">
+            <slot name="footer"></slot>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
-
-<style scoped>
-.modal-content {
-  overflow: visible;
-}
-</style>

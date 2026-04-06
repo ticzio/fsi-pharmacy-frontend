@@ -47,7 +47,7 @@
                 <button
                   type="button"
                   class="btn btn-primary px-5 py-2 rounded-pill fw-bold d-flex align-items-center gap-2"
-                  :disabled="loading"
+                  :disabled="loading || !isFormValid"
                   @click="handleUpdate"
                 >
                   <i v-if="loading" class="spinner-border spinner-border-sm"></i>
@@ -70,10 +70,12 @@ import { useCookies } from '@/composables/useCookies'
 import TitleSection from '@/components/common/titleSection.vue'
 import OperatorForm from '@/components/Operators/OperatorForm.vue'
 import dashboardLayout from '@/components/DashboardLayout.vue'
+import { provideFormValidation } from '@/composables/useFormValidation'
 
 const { getUser, updateProfile, getRoles, roles, loading } = useUsers()
 const store = useStore()
 const { getCookie } = useCookies()
+const { isFormValid } = provideFormValidation()
 
 const form = ref<any>({
   id: '',

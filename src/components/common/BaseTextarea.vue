@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
+import { useFormValidation } from '@/composables/useFormValidation'
 
 interface Props {
   modelValue: string | number
@@ -64,6 +65,25 @@ const handleBlur = (event: Event) => {
   const target = event.target as HTMLTextAreaElement
   validate(target.value)
 }
+
+// Integración con el sistema global de validación del formulario
+const formValidation = useFormValidation()
+const hasError = computed(() => internalErrors.value.length > 0)
+
+if (formValidation) {
+  onMounted(() => {
+    formValidation.registerField(props.id, hasError.value)
+  })
+
+  watch(hasError, (newVal) => {
+    formValidation.updateFieldStatus(props.id, newVal)
+  })
+
+  onUnmounted(() => {
+    formValidation.unregisterField(props.id)
+  })
+}
+
 </script>
 
 <template>

@@ -43,6 +43,22 @@ const router = createRouter({
   ],
 })
 
+router.onError((error, to) => {
+  const isChunkLoadError =
+    error instanceof TypeError ||
+    error.name === 'ChunkLoadError' ||
+    /Loading chunk|Failed to fetch dynamically imported module/i.test(error.message)
+
+  if (isChunkLoadError) {
+    // Avoid infinite reload loops: track if we already reloaded for this path
+    const reloadedKey = `chunk_reload_${to.fullPath}`
+    if (!sessionStorage.getItem(reloadedKey)) {
+      sessionStorage.setItem(reloadedKey, '1')
+      window.location.href = to.fullPath
+    }
+  }
+})
+
 /* Navigation guards
 router.beforeEach((to, from, next) => {
   const roleId = getRoleIdFromCookie()

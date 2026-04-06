@@ -7,6 +7,7 @@ import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
 import Modal from '@/components/common/Modal.vue'
 import CouponForm from '@/components/Coupons/CouponForm.vue'
+import AppImage from '@/components/common/AppImage.vue'
 
 //Composables
 import { useStore } from 'vuex'
@@ -51,7 +52,7 @@ const handleTableAction = async ({ actionName, item }: { actionName: string; ite
 }
 
 const getTableActions = async () => {
-  return [TABLE_ACTIONS.edit, TABLE_ACTIONS.deactivate, TABLE_ACTIONS.delete]
+  return [TABLE_ACTIONS.edit]
 }
 
 const handleTablePagination = (page: number) => {
@@ -121,22 +122,16 @@ onMounted(() => {
           @action-click="handleTableAction"
         >
           <template #cell(url_img)="{ value }">
-            <div class="d-flex align-items-center justify-content-center" style="height: 40px">
-              <img
-                :src="value"
-                alt="Coupon Image"
-                class="rounded-3 border"
-                style="height: 100%; object-fit: cover"
-                v-if="value"
-              />
-              <span class="text-muted" v-else>Sin imagen</span>
-            </div>
+            <AppImage :src="value" :alt="'Imagen del cupón'" />
           </template>
           <template #cell(start_date)="{ value }">
             <span v-format-date="value"></span>
           </template>
           <template #cell(finish_date)="{ value }">
             <span v-format-date="value"></span>
+          </template>
+          <template #cell(created_at)="{ value }">
+            <span v-format-date-time="value"></span>
           </template>
         </CustomTable>
       </div>

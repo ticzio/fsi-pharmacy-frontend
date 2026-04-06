@@ -171,6 +171,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useSwal } from '@/composables/useSwal'
+import { useFormValidation } from '@/composables/useFormValidation'
 
 // Control compartido entre instancias para 'global-active'
 let activePasteId: string | null = null
@@ -194,6 +195,8 @@ const props = withDefaults(
     placeholder?: string
     // Array de reglas de validación (como en BaseInput)
     rules?: Array<(val: any) => string | boolean>
+    /** Identificador único del campo para integración con useFormValidation */
+    id?: string
   }>(),
   {
     pasteBehavior: 'global-active',
@@ -215,6 +218,25 @@ const instanceId = ref<string>(generateUniqueId())
 const errorMsg = ref<string | null>(null)
 const imageError = ref<boolean>(false)
 const internalErrors = ref<string[]>([])
+
+// Integración con el sistema global de validación del formulario
+const formValidation = useFormValidation()
+const fieldId = props.id || instanceId.value
+const hasError = computed(() => internalErrors.value.length > 0)
+
+if (formValidation) {
+  onMounted(() => {
+    formValidation.registerField(fieldId, hasError.value)
+  })
+
+  watch(hasError, (newVal) => {
+    formValidation.updateFieldStatus(fieldId, newVal)
+  })
+
+  onUnmounted(() => {
+    formValidation.unregisterField(fieldId)
+  })
+}
 
 const validate = (value: any) => {
   if (!props.rules || props.rules.length === 0) {

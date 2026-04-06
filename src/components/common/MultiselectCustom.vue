@@ -88,9 +88,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import Multiselect from 'vue-multiselect'
 import { useMultiselectDefaults, useRoleHelpers } from '@/composables/useMultiselect'
+import { useFormValidation } from '@/composables/useFormValidation'
 
 interface Props {
   modelValue?: any
@@ -112,6 +113,8 @@ interface Props {
   /** Show an animated × button to clear the selection */
   clearable?: boolean
   rules?: Array<(val: any) => string | boolean>
+  /** Identificador único del campo para integración con useFormValidation */
+  id?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -136,6 +139,27 @@ const emit = defineEmits<{
 const { defaultProps, defaultClasses } = useMultiselectDefaults()
 
 const internalErrors = ref<string[]>([])
+
+// ID único para integración con el sistema de validación global
+const fieldId = props.id || Math.random().toString(36).slice(2, 9)
+
+// Integración con el sistema global de validación del formulario
+const formValidation = useFormValidation()
+const hasError = computed(() => internalErrors.value.length > 0)
+
+if (formValidation) {
+  onMounted(() => {
+    formValidation.registerField(fieldId, hasError.value)
+  })
+
+  watch(hasError, (newVal) => {
+    formValidation.updateFieldStatus(fieldId, newVal)
+  })
+
+  onUnmounted(() => {
+    formValidation.unregisterField(fieldId)
+  })
+}
 
 const validate = (value: any) => {
   if (!props.rules || props.rules.length === 0) {

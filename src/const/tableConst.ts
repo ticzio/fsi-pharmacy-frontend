@@ -172,8 +172,7 @@ export const TABLE_HEADERS = {
     { key: 'url_img', label: 'Imagen' },
     { key: 'start_date', label: 'Fecha de inicio' },
     { key: 'finish_date', label: 'Fecha de fin' },
-    { key: 'timestamp', label: 'Fecha de creación' },
-    { key: 'active', label: 'Estatus' },
+    { key: 'created_at', label: 'Fecha de creación' },
   ],
   clients: [
     ...maybeId('id_user'),

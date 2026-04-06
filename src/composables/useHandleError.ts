@@ -1,44 +1,72 @@
-// src/composables/useHandleError.ts
 import { useSwal } from '@/composables/useSwal'
 import { useSwalToast } from '@/composables/useSwalToast'
 
-/**
- * Composable centralizado para manejar errores del backend de forma estandarizada.
- *
- * Reglas:
- *  - Si el error tiene code: 401 y un atributo failed_attempts → modal de confirmación (swal.showConfirm)
- *  - Si el error tiene un campo alert enviado por el backend → toast de error (swalToast.showError)
- *  - En cualquier otro caso → muestra el defaultMessage como toast de error
- */
+export interface BackendErrorResponse {
+  status?: string | number
+  code?: number
+  message?: string
+  alert?: string
+  failed_attempts?: number
+  [key: string]: any
+}
+
 export function useHandleError() {
   const swal = useSwal()
   const swalToast = useSwalToast()
 
   /**
-   * Maneja la respuesta de error del backend.
-   * @param error   El objeto rechazado por la promesa (viene directamente del backend).
-   * @param defaultMessage  Mensaje genérico a mostrar si el error no incluye un campo `alert`.
+   * Maneja errores devueltos por la API o excepciones generales,
+   * y muestra una alerta (Swal o Toast) usando el mensaje 'alert' del backend o alertas por defecto.
+   *
+   * @param error - Objeto de error enviado por backend o excepción en JS
+   * @param defaultMessage - Mensaje por defecto en caso de no poder extraerlo
    */
-  const handleErrorResponse = (error: any, defaultMessage = 'Ocurrió un error inesperado') => {
-    // Caso 1: 401 con intentos fallidos registrados
-    if (error?.code === 401 && error?.failed_attempts !== undefined) {
-      swal.showConfirm(error.alert || 'Acceso denegado', `Intentos fallidos: ${error.failed_attempts}`, {
-        icon: 'error',
-        showCancelButton: false,
-        confirmButtonText: 'Entendido',
-      })
-      return
+  const handleErrorResponse = (
+    error: any,
+    defaultMessage: string = 'Error al procesar la solicitud',
+  ) => {
+    // Si error es de axios, a menudo el body de error que envía el backend viene en error.response.data
+    // Si viene directo del reject() de nuestro store, ya es el objeto parseado.
+    const errData = error?.response?.data || error
+
+    if (errData && typeof errData === 'object') {
+      // CASO LOGIN: si hay 401 y failed_attempts existe, mostrar confirm
+      if (errData.code === 401 && errData.failed_attempts !== undefined) {
+        swal.showConfirm(
+          errData.alert || errData.message || defaultMessage,
+          `Intentos fallidos: ${errData.failed_attempts}`,
+          {
+            icon: 'error',
+            showCancelButton: false,
+            confirmButtonText: 'Entendido',
+          },
+        )
+        return
+      }
+
+      // CASO 404 NOT FOUND: Recurso no encontrado
+      if (errData.status === 404) {
+        swalToast.showError('Error en la URL solicitada.')
+        return
+      }
+
+      if (errData.code === 400) {
+        swalToast.showError('Error en los datos enviados.')
+        return
+      }
+
+      // CASO GENERAL: Utilizar el atributo 'alert' provisto por la estructura de backend
+      if (errData.alert) {
+        swalToast.showError(errData.alert)
+        return
+      }
     }
 
-    // Caso 2: El backend envía un campo `alert` con el mensaje a mostrar
-    if (error?.alert) {
-      swalToast.showError(error.alert)
-      return
-    }
-
-    // Caso 3: Fallback al mensaje por defecto
+    // FALLBACK FINAL: si es un error nativo u otro formato, mostramos el valor por defecto
     swalToast.showError(defaultMessage)
   }
 
-  return { handleErrorResponse }
+  return {
+    handleErrorResponse,
+  }
 }

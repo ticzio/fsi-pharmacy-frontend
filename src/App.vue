@@ -99,6 +99,14 @@ body {
 .modal-backdrop {
   zoom: var(--app-zoom);
 }
+
+// The backdrop is injected outside #app, so 'zoom' shrinks it.
+// Compensate by stretching width & height to the inverse of the zoom factor
+// so it covers 100% of the real viewport.
+.modal-backdrop {
+  width: calc(100% / var(--app-zoom)) !important;
+  height: calc(100% / var(--app-zoom)) !important;
+}
 // ────────────────────────────────────────────────────────────────────────────
 
 [data-title]:hover:after {

@@ -2,6 +2,7 @@
 import { reactive } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import { isValidEmail } from '@/utils/funcEmails'
+import { provideFormValidation } from '@/composables/useFormValidation'
 
 defineProps({
   loading: {
@@ -31,6 +32,8 @@ const emailRules = [
 ]
 
 const passwordRules = [(v: string) => !!v || 'La contraseña es requerida']
+
+const { isFormValid } = provideFormValidation()
 
 const handleLogin = () => {
   emit('submit', { email: credentials.email, password: credentials.password })
@@ -74,7 +77,7 @@ const handleLogin = () => {
         />
 
         <div class="d-grid mt-4">
-          <button type="submit" :disabled="loading" class="btn btn-primary btn-lg custom-btn">
+          <button type="submit" :disabled="loading || !isFormValid" class="btn btn-primary btn-lg custom-btn">
             {{ loading ? 'Iniciando...' : 'Entrar' }}
           </button>
         </div>

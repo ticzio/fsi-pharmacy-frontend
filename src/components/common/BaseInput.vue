@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useFormValidation } from '@/composables/useFormValidation'
 
 interface Props {
   modelValue: string | number
@@ -48,6 +49,24 @@ const validate = (value: any) => {
   }
   internalErrors.value = errors
   return errors.length === 0
+}
+
+// Integración con el sistema global de validación del formulario
+const formValidation = useFormValidation()
+const hasError = computed(() => internalErrors.value.length > 0)
+
+if (formValidation) {
+  onMounted(() => {
+    formValidation.registerField(props.id, hasError.value)
+  })
+
+  watch(hasError, (newVal) => {
+    formValidation.updateFieldStatus(props.id, newVal)
+  })
+
+  onUnmounted(() => {
+    formValidation.unregisterField(props.id)
+  })
 }
 
 // Opcional: Validar cuando cambia el valor desde fuera
