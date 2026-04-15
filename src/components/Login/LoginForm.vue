@@ -63,6 +63,7 @@ const handleLogin = () => {
           v-model="credentials.email"
           :disabled="showNetworkError"
           :rules="emailRules"
+          autocomplete="email"
         />
 
         <BaseInput
@@ -74,10 +75,15 @@ const handleLogin = () => {
           :disabled="showNetworkError"
           :rules="passwordRules"
           class="mb-4"
+          autocomplete="current-password"
         />
 
         <div class="d-grid mt-4">
-          <button type="submit" :disabled="loading || !isFormValid" class="btn btn-primary btn-lg custom-btn">
+          <button
+            type="submit"
+            :disabled="loading || !isFormValid"
+            class="btn btn-primary btn-lg custom-btn"
+          >
             {{ loading ? 'Iniciando...' : 'Entrar' }}
           </button>
         </div>
