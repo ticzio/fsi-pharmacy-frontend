@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { useSwal } from '@/composables/useSwal'
 
 import { MENU_ITEMS, isMenuItemActive } from '@/const/menuItems'
 import type { MenuItem } from '@/const/menuItems'
-import { useCookies } from '@/composables/useCookies'
+
 import defaultAvatar from '@/assets/images/default-profile.png'
 import fsiLogo from '@/assets/images/login/login_logo_FSI.png'
 
@@ -15,10 +15,10 @@ const route = useRoute()
 const router = useRouter()
 const swal = useSwal()
 
-const { getCookie } = useCookies()
-const CookiesFullName = getCookie('fsi_pharmacy_full_name') || 'Usuario'
-const CookiesEmail = getCookie('fsi_pharmacy_email') || 'Administrador'
-const CookiesUrlImage = getCookie('fsi_pharmacy_url_image')
+const currentUser = computed(() => store.getters.currentUser)
+const CookiesFullName = computed(() => currentUser.value?.full_name || 'Usuario')
+const CookiesEmail = computed(() => currentUser.value?.email || 'Administrador')
+const CookiesUrlImage = computed(() => currentUser.value?.url_image || '')
 
 // Helper para verificar si un item está activo
 const isItemActive = (item: MenuItem): boolean => {

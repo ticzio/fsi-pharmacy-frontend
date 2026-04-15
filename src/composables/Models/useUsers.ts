@@ -7,6 +7,7 @@ import { URLS } from '@/const/api'
 import { ERROR } from '@/const/errorConst'
 import { TABLE_PAGINATION } from '@/const/tableConst'
 import { useRoles } from '@/composables/Models/useRoles'
+import { useCookies } from '@/composables/useCookies'
 
 export interface UserInterface {
   id: number | string
@@ -303,6 +304,32 @@ export function useUsers() {
       })
 
       if (response.code === 200 || response.code === 201) {
+        // Re-fetch del perfil para obtener datos actualizados (ej: url_image del backend)
+        try {
+          const profileResponse: any = await store.dispatch('getData', {
+            url: 'auth/profile',
+          })
+          if (profileResponse.code === 200) {
+            const updatedUser = profileResponse.data
+            // Actualizar el store (activa reactividad en el sidebar)
+            store.commit('SET_USER', updatedUser)
+            // Sincronizar cookies para persistencia entre recargas
+            const { setCookie, removeCookie } = useCookies()
+            setCookie(
+              'fsi_pharmacy_full_name',
+              updatedUser.full_name ||
+                `${updatedUser.first_name} ${updatedUser.last_name}`,
+            )
+            setCookie('fsi_pharmacy_email', updatedUser.email)
+            if (updatedUser.url_image) {
+              setCookie('fsi_pharmacy_url_image', updatedUser.url_image)
+            } else {
+              removeCookie('fsi_pharmacy_url_image')
+            }
+          }
+        } catch (e) {
+          console.error('Error al re-fetch del perfil:', e)
+        }
         swalToast.showSuccess('Perfil actualizado correctamente')
         return true
       } else {
