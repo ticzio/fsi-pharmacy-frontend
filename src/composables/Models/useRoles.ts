@@ -26,6 +26,7 @@ export function useRoles() {
   })
 
   const getDataRoles = async (page = 1, search = '') => {
+    roles.value = []
     loading.value = true
     try {
       const response: any = await store.dispatch('getData', {
@@ -44,15 +45,20 @@ export function useRoles() {
         pagination.currentPage = response.meta?.current_page || response.current_page
       } else {
         handleErrorResponse(null, 'Recursos no encontrados')
+        roles.value = []
+        pagination.totalPages = 1
       }
     } catch (error: any) {
       handleErrorResponse(error, 'Recursos no encontrados')
+      roles.value = []
+      pagination.totalPages = 1
     } finally {
       loading.value = false
     }
   }
 
   const getRoles = async () => {
+    roles.value = []
     loading.value = true
     try {
       const response: any = await store.dispatch('getData', {
@@ -66,9 +72,11 @@ export function useRoles() {
         roles.value = response.data
       } else {
         handleErrorResponse(null, 'Recursos no encontrados')
+        roles.value = []
       }
     } catch (error: any) {
       handleErrorResponse(error, 'Recursos no encontrados')
+      roles.value = []
     } finally {
       loading.value = false
     }

@@ -24,6 +24,7 @@ export function useCoupons() {
   })
 
   const getDataCoupons = async (page = 1, search = '') => {
+    coupons.value = []
     loading.value = true
     try {
       const response: any = await store.dispatch('getData', {
@@ -42,12 +43,18 @@ export function useCoupons() {
         pagination.currentPage = response.meta.current_page
       } else if (response.code === 404) {
         swalToast.showError('No se encontraron registros de cupones')
+        coupons.value = []
+        pagination.totalPages = 1
       } else {
         swalToast.showError('Error al obtener los registros de cupones')
+        coupons.value = []
+        pagination.totalPages = 1
       }
     } catch (error: any) {
       console.error('Error fetching coupons:', error)
       swalToast.showError('Recursos no encontrados')
+      coupons.value = []
+      pagination.totalPages = 1
     } finally {
       loading.value = false
     }

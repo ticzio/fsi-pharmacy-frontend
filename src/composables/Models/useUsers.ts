@@ -84,6 +84,9 @@ export function useUsers() {
         pagination.currentPage = response.meta?.current_page || response.current_page
       } else {
         swalToast.showError('Recursos no encontrados')
+        users.value = []
+        pagination.totalPages = 1
+        pagination.currentPage = 1
       }
     } catch (error: any) {
       console.error('Error fetching users:', error)
@@ -112,6 +115,7 @@ export function useUsers() {
     }
 
     const promise = (async () => {
+      user.value = null
       loading.value = true
       try {
         const response: any = await store.dispatch('getData', {
@@ -122,10 +126,13 @@ export function useUsers() {
         if (response.code === 200) {
           user.value = response.data
           return response.data
+        } else {
+          user.value = null
+          return null
         }
-        return null
       } catch (error) {
         console.error('Error in getUser:', error)
+        user.value = null
         return null
       } finally {
         loading.value = false

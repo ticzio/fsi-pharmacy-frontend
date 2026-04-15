@@ -59,6 +59,11 @@ const fetchData = () => {
   getExchanges(1, search.value, idPharmacy)
 }
 
+const refreshData = () => {
+  search.value = ''
+  fetchData()
+}
+
 onMounted(() => {
   const savedPageGetter = store.getters['pagination/getPage']
   const savedPage = savedPageGetter(paginationKey) || 1
@@ -91,7 +96,7 @@ onMounted(() => {
         <div
           class="col-12 col-md d-flex flex-md-row gap-2 align-items-stretch align-items-md-end justify-content-md-end mt-1 mt-md-0"
         >
-          <FetchButton @fetch="fetchData" :loading="loading" />
+          <FetchButton @fetch="refreshData" :loading="loading" />
         </div>
       </div>
 
