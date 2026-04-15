@@ -74,7 +74,6 @@ export function useSwal() {
       // Sobrescribimos el comportamiento del mixin para que no tenga timer ni barra de tiempo
       timer: undefined,
       timerProgressBar: false,
-      showLoaderOnConfirm: true,
       allowOutsideClick: () => !Swal.isLoading(),
       ...options,
     })

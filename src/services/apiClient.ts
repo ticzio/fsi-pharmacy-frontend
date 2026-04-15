@@ -2,7 +2,6 @@
 import axios from 'axios'
 import { useSwal } from '@/composables/useSwal'
 import { API_PATH } from '@/services/initApi'
-import type { IValidationErrors } from '@/interfaces/http'
 import { generate_daily_tokenticz } from '@/utils/tokenticz'
 import { useCookies } from '@/composables/useCookies'
 import store from '@/store'
@@ -18,21 +17,6 @@ const apiClient = axios.create({
 // Permite configurar la baseURL una vez que InitializeConfig() haya terminado
 export function setApiBaseURL() {
   apiClient.defaults.baseURL = API_PATH()
-}
-
-// 2. Función auxiliar para manejar errores de validación 422
-const handleValidationError = (errors: IValidationErrors, showError: (message: string) => void) => {
-  // Implementación de la lógica para extraer el primer error visible
-  let firstError = ''
-  if (errors && typeof errors === 'object') {
-    for (const field in errors) {
-      if (errors[field] && Array.isArray(errors[field]) && errors[field].length > 0) {
-        firstError = errors[field][0]
-        break
-      }
-    }
-  }
-  showError(firstError || 'Se encontraron errores de validación.')
 }
 
 apiClient.interceptors.request.use(
@@ -60,27 +44,34 @@ apiClient.interceptors.request.use(
 
 // 3. Interceptor de Errores
 apiClient.interceptors.response.use(
-  (response) => response, // Respuesta exitosa: pasa
-  async (error) => {
-    const { showError, showConfirm } = useSwal()
+  async (response) => {
+    const { showConfirm } = useSwal()
+    const data = response.data
 
-    const status = error.response?.status
-    const data = error.response?.data
+    // 1. Manejar respuestas con éxito HTTP (200), pero que contienen errores de lógica de negocio (ej. UNAUTHORIZED)
+    if (data && (data.status === 'UNAUTHORIZED' || data.code === 401)) {
+      await showConfirm(
+        data.alert || 'Sesión Expirada',
+        'Tu sesión ha finalizado. Por favor, inicia sesión de nuevo.',
+        {
+          showCancelButton: false,
+          confirmButtonText: 'Aceptar',
+        },
+      )
+      store.dispatch('logout')
+      window.location.href = '/login'
+      return Promise.reject(response)
+    }
+
+    return response
+  },
+  async (error) => {
+    const { showError } = useSwal()
+
+    const status = error.response
 
     if (status) {
       switch (status) {
-        case 422:
-          // Manejo específico del objeto de errores de validación
-          handleValidationError(data.errors, showError)
-          break
-        case 404:
-          showError('No se encontró el registro.')
-          break
-        case 500:
-          showError('Error interno del servidor. Inténtalo más tarde.')
-          break
-        default:
-        // Muestra el mensaje de error de la API o un genérico
       }
     } else {
       // Fallo de red/timeout
