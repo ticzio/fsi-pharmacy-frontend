@@ -10,6 +10,7 @@ import { useExchanges } from '@/composables/Models/useExchanges'
 import { useSwalToast } from '@/composables/useSwalToast'
 import { useCookies } from '@/composables/useCookies'
 
+import { filterDniCharacters } from '@/utils/funcDni'
 import { TITLE_SECTION_COMPONENT } from '@/const/tableConst'
 
 interface Item {
@@ -39,9 +40,26 @@ const searchCI = ref('')
 const isValidating = ref(false)
 const couponFound = ref<any>(null)
 const validationError = ref('')
+const ciIsFocused = ref(false)
+
+// Handler directo para el input de CI - manipula el DOM directamente para evitar
+// problemas de reactividad donde Vue omite actualizar el input si el valor filtrado
+// es igual al valor anterior del ref.
+const handleCIInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const filtered = filterDniCharacters(target.value)
+  target.value = filtered   // Actualiza el DOM directamente
+  searchCI.value = filtered // Sincroniza el ref
+}
+
+const handleCIKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    validateCoupon()
+  }
+}
 
 const isCouponValid = computed(() => {
-  return couponFound.value && !couponFound.value.is_redeemed
+  return couponFound.value && !Array.isArray(couponFound.value) && !couponFound.value.is_redeemed
 })
 
 const validateCoupon = async () => {
@@ -56,8 +74,12 @@ const validateCoupon = async () => {
 
   try {
     const data = await checkCoupon(searchCode.value, searchCI.value)
-    if (data) {
+    if (data && !Array.isArray(data)) {
       couponFound.value = data
+    } else {
+      couponFound.value = null
+      // Si el backend retorna [] con código 200, el composable no muestra error, lo hacemos aquí
+      swalToast.showError('Cupón no encontrado o datos incorrectos')
     }
   } catch (error: any) {
     console.error('Error validating coupon:', error)
@@ -124,14 +146,34 @@ onMounted(() => {
           </div>
           <div class="col-12 col-md-4">
             <h6 class="fw-bold mb-3 text-dark">Cédula del cliente</h6>
-            <SearchInput
-              id="client-ci"
-              v-model="searchCI"
-              placeholder="Ingrese la cédula"
-              :loading="isValidating"
-              :only-on-enter="true"
-              @search="validateCoupon"
-            />
+            <div class="input-group search-group" :class="{ 'is-focused': ciIsFocused }">
+              <span class="input-group-text search-icon-wrap" :class="{ 'text-primary': ciIsFocused }">
+                <i class="bi bi-search text-muted transition-icon" :class="{ 'text-primary': ciIsFocused }"></i>
+              </span>
+              <input
+                id="client-ci"
+                type="text"
+                class="form-control search-control"
+                :value="searchCI"
+                placeholder="Ej: V-12345678 o 12345678"
+                autocomplete="off"
+                spellcheck="false"
+                @input="handleCIInput"
+                @focus="ciIsFocused = true"
+                @blur="ciIsFocused = false"
+                @keydown="handleCIKeydown"
+              />
+              <span
+                v-if="searchCI"
+                class="input-group-text clear-wrap"
+                @click="searchCI = ''; ciIsFocused = false"
+                title="Limpiar"
+              >
+                <button class="btn btn-link p-0 text-muted text-decoration-none" type="button" tabindex="-1">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </span>
+            </div>
           </div>
           <div class="col-12 col-md-auto ms-md-auto">
             <button
@@ -146,10 +188,16 @@ onMounted(() => {
           <div class="col-12 col-md-auto">
             <transition name="fade">
               <div
-                v-if="couponFound"
+                v-if="isCouponValid"
                 class="status-badge-custom success py-2 px-4 rounded-pill border border-success text-success fw-bold text-center"
               >
                 Cupón disponible
+              </div>
+              <div
+                v-else-if="couponFound && couponFound.is_redeemed"
+                class="status-badge-custom danger py-2 px-4 rounded-pill border border-danger text-danger fw-bold text-center"
+              >
+                Cupón ya canjeado
               </div>
             </transition>
           </div>
@@ -325,5 +373,73 @@ onMounted(() => {
 .fallback-section:hover .bi-search-heart {
   opacity: 0.5 !important;
   transform: scale(1.1);
+}
+
+/* ── SearchInput-matching styles for the native CI input ────────────── */
+
+.search-group {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.search-group:hover {
+  border-color: #d1d5db;
+}
+
+.search-group.is-focused,
+.search-group:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.12);
+}
+
+.search-icon-wrap,
+.clear-wrap {
+  background: transparent;
+  border: none;
+  padding: 0 0.75rem;
+  min-width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transition-icon {
+  transition: color 0.3s ease;
+}
+
+.clear-wrap {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.clear-wrap:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.search-control {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.5rem;
+  color: #111827;
+}
+
+.search-control::placeholder {
+  color: #9ca3af;
+  font-size: 0.93rem;
+  transition: color 0.3s ease;
+}
+
+.search-group.is-focused .search-control::placeholder {
+  color: #cdd4df;
+}
+
+.search-control:focus {
+  background: transparent;
+  outline: none;
 }
 </style>
