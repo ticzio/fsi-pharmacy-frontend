@@ -3,8 +3,11 @@ import type { Directive } from 'vue'
 
 const formatDate = (dateTime: string | null | undefined): string => {
   if (dateTime) {
-    // Parsear formato del backend (YYYY-MM-DD HH:mm:ss) como UTC y convertir a hora local
-    return moment.utc(dateTime, 'YYYY-MM-DD HH:mm:ss').local().format('DD-MM-YYYY hh:mm a')
+    // Parsear formatos del backend (YYYY-MM-DD HH:mm:ss o YYYY/MM/DD HH:mm:ss) como UTC y convertir a hora local
+    return moment
+      .utc(dateTime, ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'])
+      .local()
+      .format('DD-MM-YYYY hh:mm a')
   }
   return ''
 }
