@@ -3,6 +3,7 @@ import { reactive } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import { isValidEmail } from '@/utils/funcEmails'
 import { provideFormValidation } from '@/composables/useFormValidation'
+import VueTurnstile from 'vue-turnstile'
 
 defineProps({
   loading: {
@@ -24,7 +25,10 @@ const emit = defineEmits(['submit'])
 const credentials = reactive({
   email: '',
   password: '',
+  token: '',
 })
+
+const turnstileKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
 
 const emailRules = [
   (v: string) => !!v || 'El correo es requerido',
@@ -36,7 +40,7 @@ const passwordRules = [(v: string) => !!v || 'La contraseña es requerida']
 const { isFormValid } = provideFormValidation()
 
 const handleLogin = () => {
-  emit('submit', { email: credentials.email, password: credentials.password })
+  emit('submit', { email: credentials.email, password: credentials.password, turnstileToken: credentials.token })
 }
 </script>
 
@@ -78,10 +82,17 @@ const handleLogin = () => {
           autocomplete="current-password"
         />
 
+        <div class="mt-3 mb-4 d-flex justify-content-center">
+          <vue-turnstile
+            :site-key="turnstileKey"
+            v-model="credentials.token"
+          />
+        </div>
+
         <div class="d-grid mt-4">
           <button
             type="submit"
-            :disabled="loading || !isFormValid"
+            :disabled="loading || !isFormValid || !credentials.token"
             class="btn btn-primary btn-lg custom-btn"
           >
             {{ loading ? 'Iniciando...' : 'Entrar' }}

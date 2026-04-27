@@ -20,6 +20,7 @@ const loading = ref(false)
 const handleLogin = async (credentialsPayload: any) => {
   const email = normalizeEmail(credentialsPayload.email)
   const password = credentialsPayload.password
+  const turnstile_token = credentialsPayload.turnstileToken
 
   if (!email || !password) {
     handleErrorResponse({ alert: 'Por favor, completa todos los campos' }, 'Por favor, completa todos los campos')
@@ -30,7 +31,7 @@ const handleLogin = async (credentialsPayload: any) => {
   try {
     const response = await store.dispatch('login', {
       url: '/auth/login/pharmacy',
-      credentials: { email, password },
+      credentials: { email, password, turnstile_token },
     })
 
     if (response.code == 200) {

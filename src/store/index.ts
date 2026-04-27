@@ -122,7 +122,7 @@ const store = createStore({
       // El primer argumento es el contexto de Vuex, lo desestructuramos para obtener 'commit'
       { commit }: { commit: Function },
       // El segundo argumento AHORA es el objeto payload. Lo desestructuramos también.
-      { url, credentials }: { url: string; credentials: { email: string; password: string } },
+      { url, credentials }: { url: string; credentials: { email: string; password: string; turnstile_token?: string } },
     ) {
       const { resetAuthRole } = useAuth()
       const { setCookie } = useCookies()
