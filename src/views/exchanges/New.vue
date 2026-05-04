@@ -218,14 +218,14 @@ onMounted(() => {
                   <span class="fw-bold text-dark">{{ couponFound.client.full_name || 'N/A' }}</span>
                 </div>
                 <div class="detail-item">
-                  <span class="text-muted d-block small">Beneficio:</span>
+                  <span class="text-muted d-block small">Nivel:</span>
                   <span class="fw-bold text-dark">{{
-                    couponFound.benefit?.body_only_text || 'N/A'
+                    couponFound.level?.name || 'N/A'
                   }}</span>
                 </div>
                 <div class="detail-item">
                   <span class="text-muted d-block small">Fecha de expiración:</span>
-                  <span class="fw-bold text-dark">{{ couponFound.coupon?.finish_date || couponFound.expires_at || 'Consultar' }}</span>
+                  <span class="fw-bold text-dark" v-format-date="couponFound.coupon?.finish_date" ></span>
                 </div>
               </div>
 
@@ -247,7 +247,7 @@ onMounted(() => {
                   <thead>
                     <tr class="text-muted small uppercase">
                       <th>Código</th>
-                      <th>Beneficio</th>
+                      <th>Nivel</th>
                       <th>Fecha</th>
                       <th>Sede</th>
                     </tr>
@@ -256,9 +256,9 @@ onMounted(() => {
                     <tr v-for="item in recentExchanges.slice(0, 5)" :key="item.id">
                       <td class="fw-bold text-dark">{{ item.coupon?.code || item.id_coupon_client?.code || '-' }}</td>
                       <td class="text-muted">
-                        {{ item.benefit?.body_only_text || 'Canje' }}
+                        {{ item.level?.name || 'Canje' }}
                       </td>
-                      <td class="text-muted">{{ item.exchanged_at }}</td>
+                      <td class="text-muted">{{ item.created_at }}</td>
                       <td class="fw-bold">{{ item.id_pharmacy?.name || 'Sede' }}</td>
                     </tr>
                     <tr v-if="recentExchanges.length === 0">

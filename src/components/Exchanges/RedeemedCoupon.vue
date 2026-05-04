@@ -16,7 +16,7 @@ const exchangeDate = computed(() => {
   return date ? getMoment(date).format('DD/MM/YYYY') : 'N/A'
 })
 const exchangeTime = computed(() => {
-  const date = props.exchange?.exchanged_at
+  const date = props.exchange?.created_at
   return date ? getMoment(date).format('h:mm a') : 'N/A'
 })
 const clientName = computed(() => props.exchange?.coupon_client?.client?.full_name || 'N/A')
