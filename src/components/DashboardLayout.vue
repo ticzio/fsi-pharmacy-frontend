@@ -179,7 +179,7 @@ const handleLogout = async () => {
         </header>
 
         <!-- Page Content -->
-        <main class="content-body flex-grow-1 overflow-auto p-4 w-100">
+        <main class="content-body flex-grow-1 overflow-auto px-4 pt-1 pb-4 w-100">
           <slot></slot>
         </main>
       </div>
