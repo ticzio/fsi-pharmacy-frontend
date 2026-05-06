@@ -15,10 +15,6 @@ const exchangeDate = computed(() => {
   const date = props.exchange?.exchanged_at
   return date ? getMoment(date).format('DD/MM/YYYY') : 'N/A'
 })
-const exchangeTime = computed(() => {
-  const date = props.exchange?.created_at
-  return date ? getMoment(date).format('h:mm a') : 'N/A'
-})
 const clientName = computed(() => props.exchange?.coupon_client?.client?.full_name || 'N/A')
 const clientDni = computed(() => props.exchange?.coupon_client?.client?.ci || 'N/A')
 const benefit = computed(() => props.exchange?.coupon_client?.coupon?.name || 'N/A')
@@ -97,7 +93,7 @@ const extraData = computed(() => {
           </div>
           <div class="detail-item mb-2 d-flex">
             <span class="detail-label text-muted me-2">Hora:</span>
-            <span class="detail-value fw-medium">{{ exchangeTime }}</span>
+            <span class="detail-value fw-medium" v-format-time="props.exchange?.created_at"></span>
           </div>
           <div class="detail-item mb-2 d-flex">
             <span class="detail-label text-muted me-2">Cliente:</span>

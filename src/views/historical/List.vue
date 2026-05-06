@@ -25,7 +25,7 @@ interface Item {
 const store = useStore()
 const isMobile = computed(() => store.getters.isMobile)
 
-const { loading, exchanges, pagination, getExchanges, deactivateExchange, deleteExchange } =
+const { loading, exchanges, pagination, getExchanges } =
   useExchanges()
 
 const search = ref('')

@@ -220,7 +220,13 @@ onMounted(() => {
                 <div class="detail-item">
                   <span class="text-muted d-block small">Nivel:</span>
                   <span class="fw-bold text-dark">{{
-                    couponFound.level?.name || 'N/A'
+                    couponFound.coupon?.id_levels?.name || 'N/A'
+                  }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="text-muted d-block small">Nombre del cupón:</span>
+                  <span class="fw-bold text-dark">{{
+                    couponFound.coupon?.name || 'N/A'
                   }}</span>
                 </div>
                 <div class="detail-item">
@@ -230,7 +236,7 @@ onMounted(() => {
               </div>
 
               <button
-                class="btn btn-success w-100 py-3 fw-bold rounded-pill shadow-sm mt-auto"
+                class="btn btn-success w-100 text-white py-3 fw-bold rounded-pill shadow-sm mt-auto"
                 @click="handleUseCoupon"
               >
                 Utilizar
@@ -249,17 +255,19 @@ onMounted(() => {
                       <th>Código</th>
                       <th>Nivel</th>
                       <th>Fecha</th>
+                      <th>Hora</th>
                       <th>Sede</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="item in recentExchanges.slice(0, 5)" :key="item.id">
-                      <td class="fw-bold text-dark">{{ item.coupon?.code || item.id_coupon_client?.code || '-' }}</td>
+                      <td class="fw-bold text-dark">{{ item.coupon_client?.coupon?.code }}</td>
                       <td class="text-muted">
-                        {{ item.level?.name || 'Canje' }}
+                        {{ item.coupon_client?.coupon?.id_levels?.name }}
                       </td>
-                      <td class="text-muted">{{ item.created_at }}</td>
-                      <td class="fw-bold">{{ item.id_pharmacy?.name || 'Sede' }}</td>
+                      <td class="text-muted" v-format-date="item.exchanged_at" ></td>
+                      <td class="text-muted" v-format-time="item.created_at" ></td>
+                      <td class="fw-bold">{{ item.id_pharmacy?.name }}</td>
                     </tr>
                     <tr v-if="recentExchanges.length === 0">
                       <td colspan="4" class="text-center py-4 text-muted">
