@@ -15,16 +15,15 @@ export function useDashboardCharts() {
 
   const chartOptions = reactive<ApexOptions>({
     chart: {
-      type: 'line',
+      type: 'bar',
       height: 280,
       toolbar: { show: false },
       zoom: { enabled: false }
     },
-    colors: ['#1e3888', '#00d500'],
+    colors: ['#1e3888', '#00d500', '#ff6b6b'],
     dataLabels: { enabled: false },
-    stroke: { 
-      curve: 'smooth',
-      width: 3
+    stroke: {
+      width: 0
     },
     xaxis: {
       categories: ['FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL'],
