@@ -26,7 +26,7 @@ export function getEnvironmentAlert() {
   return env
 }
 
-export const API_VERSION = '0.7'
+export const API_VERSION = '1.0'
 export async function InitializeConfig() {
   try {
     if (urlDomain.includes('localhost:517') || urlDomain.includes('localhost:417')) {
