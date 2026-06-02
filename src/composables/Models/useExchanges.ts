@@ -156,12 +156,12 @@ export function useExchanges() {
         await getExchanges(pagination.currentPage, currentSearch.value)
         return true
       } else {
-        swalToast.showError('Recursos no encontrados')
+        swalToast.showError(response.alert || 'Error al canjear el cupón')
         return false
       }
     } catch (error: any) {
       console.error('Error saving exchange:', error)
-      swalToast.showError('Recursos no encontrados')
+      swalToast.showError(error.alert || 'Error al canjear el cupón')
       return false
     } finally {
       loading.value = false
