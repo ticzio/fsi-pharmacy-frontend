@@ -6,16 +6,24 @@ import ImageUploader from '@/components/common/ImageUploader.vue'
 import { useRoute } from 'vue-router'
 import { useMoment } from '@/composables/useMoment'
 
+interface LevelData {
+  id?: number | string
+  name?: string
+  min_points?: number
+  max_points?: number
+}
+
 interface CouponData {
   id?: number | string
   code: string
   name: string
   description: string
   id_level: number | string
-  url_img?: string
+  url_image?: string
   start_date: string
   finish_date: string
   active: boolean
+  id_levels?: LevelData | null
 }
 
 const props = defineProps({
@@ -40,7 +48,8 @@ const formData = ref<CouponData>({
   start_date: '',
   finish_date: '',
   active: true,
-  url_img: '',
+  url_image: '',
+  id_levels: null,
 })
 
 const imageFile = ref<File | null>(null)
@@ -50,7 +59,7 @@ watch(imageFile, (newFile) => {
   if (newFile) {
     previewImageUrl.value = URL.createObjectURL(newFile)
   } else {
-    previewImageUrl.value = formData.value.url_img || ''
+    previewImageUrl.value = formData.value.url_image || ''
   }
 })
 
@@ -64,10 +73,11 @@ const initForm = () => {
       id_level: props.initialData.id_level || '',
       start_date: formatToSQL(props.initialData.start_date) || '',
       finish_date: formatToSQL(props.initialData.finish_date) || '',
-      active: props.initialData.active !== undefined ? props.initialData.active : true,
-      url_img: props.initialData.url_img || '',
+      active: props.initialData.active !== undefined ? !!props.initialData.active : true,
+      url_image: props.initialData.url_image || '',
+      id_levels: props.initialData.id_levels || null,
     }
-    previewImageUrl.value = formData.value.url_img || ''
+    previewImageUrl.value = formData.value.url_image || ''
   } else {
     formData.value = {
       code: '',
@@ -77,7 +87,8 @@ const initForm = () => {
       start_date: '',
       finish_date: '',
       active: true,
-      url_img: '',
+      url_image: '',
+      id_levels: null,
     }
     imageFile.value = null
     previewImageUrl.value = ''
@@ -95,14 +106,14 @@ watch(
   },
 )
 
-const isCreationMode = computed(() => !props.initialData || !props.initialData.id)
 
 // Helper methods validación en caso de ser no readOnly
 const emit = defineEmits(['submit'])
 
 const handleSubmit = () => {
+  const { id_levels, ...couponPayload } = formData.value
   emit('submit', {
-    ...formData.value,
+    ...couponPayload,
     imageFile: imageFile.value,
   })
 }
@@ -124,6 +135,7 @@ defineExpose({
           Visualización
         </h6>
 
+
         <div class="mb-4 d-flex flex-column flex-grow-1">
           <label class="form-label fw-bold mb-2">Imagen del Cupón</label>
           <div
@@ -133,16 +145,15 @@ defineExpose({
             <ImageUploader
               v-model="imageFile"
               :round="false"
-              :initialImageUrl="formData.url_img"
+              :initialImageUrl="formData.url_image"
               class="w-100 h-100"
               placeholder="Sin imagen disponible"
-              :inputDisabled="readOnly"
+              :inputDisabled="true"
             />
           </div>
         </div>
 
         <div
-          v-if="!isCreationMode"
           class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 border"
         >
           <div>
@@ -160,15 +171,6 @@ defineExpose({
               {{ formData.active ? 'Activo / Publicado' : 'Inactivo / Oculto' }}
             </span>
           </div>
-          <div class="form-check form-switch m-0 p-0" v-if="!readOnly">
-            <input
-              class="form-check-input ms-0 mt-0"
-              type="checkbox"
-              id="activeStatus"
-              v-model="formData.active"
-              style="cursor: pointer"
-            />
-          </div>
         </div>
       </div>
 
@@ -182,22 +184,22 @@ defineExpose({
         </h6>
 
         <div class="row g-3 mb-1">
-          <div class="col-12 col-sm-4" v-if="!isCreationMode">
+          <div class="col-12 col-sm-4">
             <BaseInput
               id="couponCode"
               v-model="formData.code"
               label="Código"
               placeholder="Ej: CUP-000"
-              :disabled="readOnly"
+              :disabled="true"
             />
           </div>
-          <div :class="isCreationMode ? 'col-12' : 'col-12 col-sm-8'">
+          <div class="col-12 col-sm-8">
             <BaseInput
               id="couponName"
               v-model="formData.name"
               label="Nombre del Cupón"
               placeholder="Nombre descriptivo"
-              :disabled="readOnly"
+              :disabled="true"
             />
           </div>
         </div>
@@ -209,7 +211,7 @@ defineExpose({
               type="date"
               v-model="formData.start_date"
               label="Fecha de Inicio"
-              :disabled="readOnly"
+              :disabled="true"
             />
           </div>
           <div class="col-12 col-sm-6">
@@ -218,21 +220,23 @@ defineExpose({
               type="date"
               v-model="formData.finish_date"
               label="Fecha de Fin"
-              :disabled="readOnly"
+              :disabled="true"
             />
           </div>
         </div>
 
-        <div class="mt-1 flex-grow-1 d-flex flex-column">
+        <div class="mt-1 d-flex flex-column">
           <BaseTextarea
             id="couponDesc"
             v-model="formData.description"
             label="Descripción"
             placeholder="Escribe el contenido detallado aquí..."
             :rows="4"
-            :disabled="readOnly"
+            :disabled="true"
           />
         </div>
+
+
       </div>
     </div>
   </div>

@@ -34,6 +34,8 @@ export function useCoupons() {
           limit: pagination.limit,
           active: null,
           query: search || null,
+          order_value: 'desc',
+          order_key: 'created_at',
         },
       })
 

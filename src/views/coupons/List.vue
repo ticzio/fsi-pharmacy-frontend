@@ -126,7 +126,7 @@ onMounted(() => {
           @change-page="handleTablePagination"
           @action-click="handleTableAction"
         >
-          <template #cell(url_img)="{ value }">
+          <template #cell(url_image)="{ value }">
             <AppImage :src="value" :alt="'Imagen del cupón'" />
           </template>
           <template #cell(start_date)="{ value }">

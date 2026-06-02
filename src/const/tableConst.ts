@@ -169,7 +169,7 @@ export const TABLE_HEADERS = {
     { key: 'name', label: 'Nombre' },
     { key: 'description', label: 'Descripción' },
     { key: 'id_level', label: 'ID Nivel' },
-    { key: 'url_img', label: 'Imagen' },
+    { key: 'url_image', label: 'Imagen' },
     { key: 'start_date', label: 'Fecha de inicio' },
     { key: 'finish_date', label: 'Fecha de fin' },
     { key: 'created_at', label: 'Fecha de creación' },
