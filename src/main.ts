@@ -12,6 +12,7 @@ import { formatPercentage } from './directives/formatPercentage'
 import { canDirective } from './directives/canDirective'
 import { formatDateTime } from './directives/formatDateTime'
 import { formatTime } from './directives/formatTime'
+import { initializeSentry } from './services/sentry'
 
 async function startApp() {
   await InitializeConfig()
@@ -27,6 +28,7 @@ async function startApp() {
   app.use(router)
   app.use(store)
   store.dispatch('initMobileListener')
+  initializeSentry(app, 'FARMACIAS')
   app.mount('#app')
 
   // Ocultar el loader inicial del index.html

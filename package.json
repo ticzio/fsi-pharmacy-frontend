@@ -1,6 +1,6 @@
 {
   "name": "fsi-pharmacy-frontend",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "test": "echo 'No hay pruebas definidas. Pasando...' && exit 0"
   },
   "dependencies": {
+    "@sentry/vue": "^10.56.0",
     "@vueup/vue-quill": "^1.2.0",
     "apexcharts": "^5.10.1",
     "axios": "^1.10.0",
