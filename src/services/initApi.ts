@@ -33,7 +33,7 @@ export async function InitializeConfig() {
       configUrl = import.meta.env.VITE_API_PATH_DEVELOP
     } else if (
       urlDomain.includes('farmatest.redfsi.net') ||
-      urlDomain.includes(import.meta.env.VITE_DOMAIN_DEVELOP)
+      (import.meta.env.VITE_DOMAIN_DEVELOP && urlDomain.includes(import.meta.env.VITE_DOMAIN_DEVELOP))
     ) {
       configUrl = import.meta.env.VITE_API_PATH_DEVELOP
       detectedEnvironment = {
@@ -42,7 +42,7 @@ export async function InitializeConfig() {
         message: 'Estás en un ambiente de desarrollo (servidor de pruebas).',
       }
     } else if (
-      urlDomain.includes(import.meta.env.VITE_DOMAIN) ||
+      (import.meta.env.VITE_DOMAIN && urlDomain.includes(import.meta.env.VITE_DOMAIN)) ||
       urlDomain.includes('farmacia.redfsi.net')
     ) {
       configUrl = import.meta.env.VITE_API_PATH
