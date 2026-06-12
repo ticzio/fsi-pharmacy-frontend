@@ -15,7 +15,7 @@
       </div>
 
       <!-- Versión Desktop: Tabla Original -->
-      <div class="table-responsive d-none d-md-block">
+      <div class="d-none d-md-block h-100">
         <table class="table" :class="{ 'opacity-50': isTableLoading }">
           <!-- Encabezado -->
           <TableHeader :headers="headers" :has-actions="hasActions" />
@@ -319,8 +319,15 @@ tr:hover {
   background-color: rgba(0, 0, 0, 0.048) !important;
 }
 .content_table {
-  overflow: auto hidden;
+  overflow-y: auto;
+  overflow-x: auto;
   padding-bottom: 1.5rem;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 .content_table::-webkit-scrollbar {
   width: 6px;

@@ -29,7 +29,7 @@ export const getRoleIdFromCookie = (): number | null => {
   try {
     // Intentamos leer con la nueva key prefijada usando js-cookie directo (para evitar dependencia circular si useCookies usa algo complejo, aunque useCookies es seguro)
     // Sin embargo, para consistencia, usaremos el nombre correcto.
-    const raw = Cookies.get('changan_admin_id_role')
+    const raw = Cookies.get('fsi_pharmacy_id_role')
     if (!raw) return null
 
     // Decodificar Base64

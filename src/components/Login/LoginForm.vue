@@ -2,6 +2,8 @@
 import { reactive } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import { isValidEmail } from '@/utils/funcEmails'
+import { provideFormValidation } from '@/composables/useFormValidation'
+import VueTurnstile from 'vue-turnstile'
 
 defineProps({
   loading: {
@@ -23,7 +25,10 @@ const emit = defineEmits(['submit'])
 const credentials = reactive({
   email: '',
   password: '',
+  token: '',
 })
+
+const turnstileKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
 
 const emailRules = [
   (v: string) => !!v || 'El correo es requerido',
@@ -32,8 +37,10 @@ const emailRules = [
 
 const passwordRules = [(v: string) => !!v || 'La contraseña es requerida']
 
+const { isFormValid } = provideFormValidation()
+
 const handleLogin = () => {
-  emit('submit', { email: credentials.email, password: credentials.password })
+  emit('submit', { email: credentials.email, password: credentials.password, turnstileToken: credentials.token })
 }
 </script>
 
@@ -49,7 +56,7 @@ const handleLogin = () => {
           class="mobile-logo"
         />
       </div>
-      <h2 class="text-center mb-3 form-title">Bienvenido Al Panel<br />Administrativo</h2>
+      <h2 class="text-center mb-3 form-title">Bienvenido Al Panel de<br />Farmacias</h2>
       <p class="text-center mb-4 pb-3 form-subtitle">Ingresa tus datos para iniciar sesión</p>
       <form @submit.prevent="handleLogin">
         <BaseInput
@@ -60,6 +67,7 @@ const handleLogin = () => {
           v-model="credentials.email"
           :disabled="showNetworkError"
           :rules="emailRules"
+          autocomplete="email"
         />
 
         <BaseInput
@@ -71,10 +79,22 @@ const handleLogin = () => {
           :disabled="showNetworkError"
           :rules="passwordRules"
           class="mb-4"
+          autocomplete="current-password"
         />
 
+        <div class="mt-3 mb-4 d-flex justify-content-center">
+          <vue-turnstile
+            :site-key="turnstileKey"
+            v-model="credentials.token"
+          />
+        </div>
+
         <div class="d-grid mt-4">
-          <button type="submit" :disabled="loading" class="btn btn-primary btn-lg custom-btn">
+          <button
+            type="submit"
+            :disabled="loading || !isFormValid || !credentials.token"
+            class="btn btn-primary btn-lg custom-btn"
+          >
             {{ loading ? 'Iniciando...' : 'Entrar' }}
           </button>
         </div>

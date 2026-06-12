@@ -84,6 +84,17 @@ watch(
   { deep: true },
 )
 
+watch(
+  () => props.isLoading,
+  (newVal) => {
+    if (!newVal) {
+      setTimeout(() => {
+        scrollToActiveTab()
+      }, 100)
+    }
+  }
+)
+
 // Re-calculate slider on window resize
 onMounted(() => {
   // Inicializar en el montaje

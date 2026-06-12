@@ -1,131 +1,151 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import TitleSection from '@/components/common/titleSection.vue'
 import StatisticCards from '@/components/Home/StatisticCards.vue'
 import LineChart from '@/components/common/Charts/LineChart.vue'
-import AreaChart from '@/components/common/Charts/AreaChart.vue'
-import StackedBarChart from '@/components/common/Charts/StackedBarChart.vue'
-import LatestUsers from '@/components/Home/LatestUsers.vue'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import { useDashboardCharts } from '@/composables/useDashboardCharts'
+import { usePharmacyAnalytics } from '@/composables/Models/usePharmacyAnalytics'
+import type { StatisticItem } from '@/components/Home/StatisticCards.vue'
 
-const users = ref([
-  { id: 1, name: 'Gabriel Correa', email: 'gabriel@example.com' },
-  { id: 2, name: 'Robert Daza', email: 'roberts@example.com' },
-  { id: 3, name: 'Gabriela Mujica', email: 'gabriela@example.com' },
-  { id: 4, name: 'Dianne Russell', email: 'dianne@example.com' },
-  { id: 5, name: 'Gabriel Torres', email: 'gabriel@example.com' },
-  { id: 6, name: 'Robert Daza', email: 'roberts@example.com' },
-  { id: 7, name: 'Gabriela Mujica', email: 'gabriela@example.com' },
-  { id: 8, name: 'Dianne Russell', email: 'dianne@example.com' },
+const statisticItems = ref<StatisticItem[]>([
+  { value: 0, label: 'Cupones activos', to: 'coupons-list' },
+  { value: 0, label: 'Cupones canjeados', to: 'historical-list' },
+  { value: 0, label: 'Chats atendidos', to: 'Chats' },
 ])
 
-const statisticItems = ref([
-  { value: 12, label: 'Sedes activas' },
-  { value: 34, label: 'Operadores activos' },
-  { value: 234, label: 'Usuarios registrados', highlighted: true },
-  { value: 96, label: 'Cupones canjeados' },
-])
+const { chartSeries, chartOptions } = useDashboardCharts()
+const { fetchAnalytics, fetchChatsAnalytics, analyticsData, chatsMonth, isLoading } =
+  usePharmacyAnalytics()
 
-const { chart1Series, chart1Options, chart2Series, chart2Options } = useDashboardCharts()
+onMounted(async () => {
+  await Promise.all([fetchAnalytics(), fetchChatsAnalytics()])
+
+  if (analyticsData.value) {
+    statisticItems.value[0].value = analyticsData.value.active_coupons || 0
+    statisticItems.value[1].value = analyticsData.value.coupons_exchanged || 0
+
+    if (analyticsData.value.exchanges_by_level) {
+      chartSeries.splice(
+        0,
+        chartSeries.length,
+        ...analyticsData.value.exchanges_by_level.map((item) => ({
+          name: item.label,
+          data: [item.value],
+        })),
+      )
+
+      chartOptions.xaxis = {
+        ...chartOptions.xaxis,
+        categories: ['Actual'],
+      }
+    }
+  }
+
+  // Actualizar Clientes Atendidos desde API externa
+  statisticItems.value[2].value = chatsMonth.value || 0
+})
+
+const store = useStore()
+const router = useRouter()
+const isRedirecting = ref(false)
+
+const pharmacyName = computed(() => store.getters.currentUser?.type_pharmacy?.name || '')
+
+const handleCardClick = async (item: StatisticItem) => {
+  if (item.to) {
+    isRedirecting.value = true
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    router.push({ name: item.to })
+  }
+}
 </script>
 
 <template>
   <DashboardLayout>
     <div
-      class="dashboard-wrapper bg-white shadow-sm p-3 p-md-4 m-0 d-flex flex-column gap-3 gap-md-4"
+      class="dashboard-wrapper bg-white shadow-sm p-3 p-md-4 m-0 d-flex flex-column gap-3 gap-md-4 position-relative h-100"
       style="border-radius: 20px"
     >
+      <!-- REDIRECT OVERLAY -->
+      <LoadingOverlay v-if="isRedirecting" message="Redireccionando..." />
+
       <!-- HEADER -->
       <TitleSection
         title="Bienvenido"
-        description="Panel administrativo de farmacias San Ignacio"
+        :description="`Panel de farmacia ${pharmacyName}`"
         :show-logo="true"
       />
 
       <!-- CARDS -->
-      <StatisticCards :items="statisticItems" />
+      <StatisticCards :items="statisticItems" @click-card="handleCardClick" />
 
       <!-- MAIN CONTENT -->
-      <div class="row g-4 flex-grow-1">
-        <!-- LEFT COLUMN: Charts -->
-        <div class="col-12 col-lg-8 d-flex flex-column gap-3 gap-md-4">
-          <!-- Top Chart -->
-          <div class="card border border-light shadow-sm rounded-4 p-3 p-md-4 flex-grow-1">
-            <div
-              class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
-            >
-              <div>
-                <h3 class="fw-bold mb-0 italic-numbers" style="color: #4a148c; font-size: 2rem">
-                  4760
-                </h3>
-                <p class="text-dark fw-bold mb-0" style="font-size: 0.9rem">Cupones canjeados</p>
-              </div>
-              <div class="d-flex flex-wrap gap-3 align-items-center">
-                <div class="d-flex align-items-center gap-2">
-                  <span
-                    class="rounded-circle"
-                    style="width: 10px; height: 10px; background-color: #1e3888"
-                  ></span>
-                  <span class="text-muted small fw-medium">Descuentos</span>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span
-                    class="rounded-circle"
-                    style="width: 10px; height: 10px; background-color: #00d500"
-                  ></span>
-                  <span class="text-muted small fw-medium">Beneficios</span>
-                </div>
-                <div
-                  class="border rounded px-3 py-1 text-muted small d-flex align-items-center gap-2 ms-2 user-select-none border-light"
-                >
-                  6 meses <i class="bi bi-caret-down-fill text-muted" style="margin-top: 1px"></i>
-                </div>
-              </div>
+      <div class="row flex-grow-1 mt-md-2 h-100">
+        <div class="col-12 d-flex flex-column h-100">
+          <div class="row g-4 align-items-stretch h-100">
+            <!-- Illustration (Left) -->
+            <div class="col-12 col-lg-5 d-flex justify-content-center align-items-center">
+              <img
+                src="@/assets/images/dashboardLayout/Home_image.png"
+                alt=""
+                class="img-fluid"
+                style="max-height: 450px; width: 100%; object-fit: contain"
+              />
             </div>
-            <div class="flex-grow-1 position-relative" style="min-height: 250px">
-              <!-- Desktop Chart -->
-              <div class="d-none d-md-block position-absolute w-100 h-100 top-0 start-0">
-                <LineChart :series="chart1Series" :options="chart1Options" />
-              </div>
-              <!-- Mobile Chart (Stacked Bar) -->
-              <div class="d-block d-md-none position-absolute w-100 h-100 top-0 start-0">
-                <StackedBarChart :series="chart1Series" :options="chart1Options" />
-              </div>
-            </div>
-          </div>
 
-          <!-- Bottom Chart -->
-          <div
-            class="card border border-light shadow-sm rounded-4 p-3 p-md-4 pb-5 pb-md-5 h-100 min-h-200"
-          >
-            <h6 class="fw-bold text-dark mb-4 text-center text-md-start" style="font-size: 1rem">
-              Usuarios registrados
-            </h6>
-            <div class="position-relative flex-grow-1 mt-2" style="min-height: 250px">
-              <!-- Tooltip Mockup (Desktop only) -->
+            <!-- Chart (Right) with Bordered Container -->
+            <div class="col-12 col-lg-7 d-flex flex-column">
               <div
-                class="position-absolute translate-middle-x bg-white border border-light shadow-sm rounded-2 d-none d-md-flex flex-column align-items-center justify-content-center p-2 z-2"
-                style="left: 45.4%; top: 5%; width: 80px"
+                class="p-4 d-flex flex-column h-100 shadow-sm"
+                style="border: 2px solid #007bff; border-radius: 25px"
               >
-                <span class="text-muted" style="font-size: 0.65rem">Junio 2026</span>
-                <span class="fw-bold text-dark lh-1 mt-1" style="font-size: 0.9rem">643</span>
-              </div>
+                <!-- Header: Stat (Left) and Legend (Right) -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div class="text-start">
+                    <h3
+                      class="fw-bold mb-0 italic-numbers"
+                      style="color: #4a148c; font-size: 2.2rem; transform: skewX(-5deg)"
+                    >
+                      <span
+                        v-if="isLoading"
+                        class="spinner-border spinner-border-sm text-primary"
+                        role="status"
+                      ></span>
+                      <span v-else>{{ analyticsData?.total_exchanges || 0 }}</span>
+                    </h3>
+                    <p class="text-dark fw-bold mb-0" style="font-size: 1rem">Cupones canjeados</p>
+                  </div>
 
-              <!-- Desktop Chart -->
-              <div class="d-none d-md-block position-absolute w-100 h-100 top-0 start-0 z-1">
-                <LineChart type="area" :series="chart2Series" :options="chart2Options" />
-              </div>
-              <!-- Mobile Chart (Intelligent Markers) -->
-              <div class="d-block d-md-none position-absolute w-100 h-100 top-0 start-0 z-1">
-                <AreaChart :series="chart2Series" :options="chart2Options" />
+                  <!-- Legend -->
+                  <div class="d-flex flex-wrap gap-4 align-items-center pe-lg-2 mt-2">
+                    <div
+                      v-for="(level, index) in analyticsData?.exchanges_by_level || []"
+                      :key="level.label"
+                      class="d-flex align-items-center gap-2"
+                    >
+                      <span
+                        class="rounded-circle"
+                        :style="`width: 10px; height: 10px; background-color: ${chartOptions.colors?.[index % (chartOptions.colors?.length || 1)] || '#1e3888'}`"
+                      ></span>
+                      <span class="text-muted small" style="font-size: 0.85rem">{{
+                        level.label
+                      }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="w-100 position-relative flex-grow-1" style="min-height: 280px">
+                  <LineChart :series="chartSeries" :options="chartOptions" />
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- RIGHT COLUMN: Users List -->
-        <LatestUsers :users="users" />
       </div>
     </div>
   </DashboardLayout>
@@ -136,25 +156,5 @@ const { chart1Series, chart1Options, chart2Series, chart2Options } = useDashboar
   font-style: italic;
   font-family: 'Arial', sans-serif;
   letter-spacing: -0.5px;
-}
-.italic-text {
-  font-style: italic;
-}
-.border-light {
-  border-color: #eee !important;
-}
-/* Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #dcdcdc;
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #c8c8c8;
 }
 </style>

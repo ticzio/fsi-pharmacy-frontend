@@ -111,7 +111,7 @@
       <div
         v-else
         class="text-center text-black text-opacity-50 d-flex flex-column align-items-center justify-content-center w-100 h-100"
-        style="font-size: 0.8rem"
+        style="font-size: 0.95rem"
       >
         <i class="bi bi-image" style="font-size: 4rem; opacity: 0.5; margin-bottom: 0.5rem"></i>
       </div>
@@ -128,7 +128,7 @@
     <div
       v-else-if="!props.inputDisabled || !imageUrl || imageError"
       class="text-center text-black text-opacity-50"
-      style="font-size: 0.8rem; margin-top: 0.2rem"
+      style="font-size: 1rem; margin-top: 0.2rem"
     >
       <p class="mb-0">
         {{
@@ -144,10 +144,26 @@
     <div
       v-if="errorMsg"
       class="alert alert-danger w-100 mt-2 p-2 text-center"
-      style="font-size: 0.9rem"
+      style="font-size: 1rem"
     >
       {{ errorMsg }}
     </div>
+
+    <transition name="fade">
+      <div v-if="internalErrors.length > 0" class="errors-wrapper w-100">
+        <div class="errors-wrapper-inner">
+          <transition-group
+            name="list"
+            tag="div"
+            class="invalid-feedback d-block mt-1 errors-container"
+          >
+            <div v-for="error in internalErrors" :key="error" class="error-item text-center">
+              • {{ error }}
+            </div>
+          </transition-group>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -155,6 +171,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useSwal } from '@/composables/useSwal'
+import { useFormValidation } from '@/composables/useFormValidation'
 
 // Control compartido entre instancias para 'global-active'
 let activePasteId: string | null = null
@@ -176,12 +193,17 @@ const props = withDefaults(
     maxSizeMB?: number
     // Texto placeholder
     placeholder?: string
+    // Array de reglas de validación (como en BaseInput)
+    rules?: Array<(val: any) => string | boolean>
+    /** Identificador único del campo para integración con useFormValidation */
+    id?: string
   }>(),
   {
     pasteBehavior: 'global-active',
-    acceptedFormats: 'image/png, image/jpeg, image/jpg',
-    maxSizeMB: 3,
+    acceptedFormats: 'image/png, image/jpeg, image/jpg, image/gif',
+    maxSizeMB: 1.5,
     placeholder: 'Haz click para subir una imagen',
+    rules: () => [],
   },
 )
 const emit = defineEmits<(e: 'update:modelValue', value: File | null) => void>()
@@ -195,11 +217,59 @@ const uniqueId = ref<string>(generateUniqueId())
 const instanceId = ref<string>(generateUniqueId())
 const errorMsg = ref<string | null>(null)
 const imageError = ref<boolean>(false)
+const internalErrors = ref<string[]>([])
+
+// Integración con el sistema global de validación del formulario
+const formValidation = useFormValidation()
+const fieldId = props.id || instanceId.value
+const hasError = computed(() => internalErrors.value.length > 0)
+
+if (formValidation) {
+  onMounted(() => {
+    formValidation.registerField(fieldId, hasError.value)
+  })
+
+  watch(hasError, (newVal) => {
+    formValidation.updateFieldStatus(fieldId, newVal)
+  })
+
+  onUnmounted(() => {
+    formValidation.unregisterField(fieldId)
+  })
+}
+
+const validate = (value: any) => {
+  if (!props.rules || props.rules.length === 0) {
+    internalErrors.value = []
+    return true
+  }
+
+  const errors: string[] = []
+  for (const rule of props.rules) {
+    const result = rule(value)
+    if (typeof result === 'string') {
+      errors.push(result)
+    } else if (result === false) {
+      errors.push('Campo inválido')
+    }
+  }
+  internalErrors.value = errors
+  return errors.length === 0
+}
 
 watch(
   () => imageUrl.value,
   () => {
     imageError.value = false
+  },
+)
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (internalErrors.value.length > 0) {
+      validate(newVal)
+    }
   },
 )
 
@@ -229,8 +299,12 @@ watch(
   () => props.modelValue,
   (newVal) => {
     selectedImage.value = newVal || null
-    if (newVal && isImage((newVal as any).name)) {
-      readFile(newVal as any)
+    if (newVal instanceof File) {
+      if (isImage(newVal.name) || newVal.type.startsWith('image/')) {
+        readFile(newVal)
+      }
+    } else if (typeof newVal === 'string') {
+      imageUrl.value = newVal
     } else if (!newVal) {
       imageUrl.value = props.initialImageUrl || null
     }
@@ -252,7 +326,7 @@ onMounted(() => {
   } else if (props.pasteBehavior === 'global-active') {
     document.addEventListener('paste', handlePaste)
   }
-  window.addEventListener('quic-image-uploader-active', handleActiveBroadcast as any)
+  window.addEventListener('fsi-image-uploader-active', handleActiveBroadcast as any)
 })
 
 onUnmounted(() => {
@@ -261,7 +335,7 @@ onUnmounted(() => {
   } else if (props.pasteBehavior === 'global-active') {
     document.removeEventListener('paste', handlePaste)
   }
-  window.removeEventListener('quic-image-uploader-active', handleActiveBroadcast as any)
+  window.removeEventListener('fsi-image-uploader-active', handleActiveBroadcast as any)
 })
 
 function onFileSelected(event: Event) {
@@ -284,6 +358,7 @@ function onFileSelected(event: Event) {
     return
   }
   emit('update:modelValue', file)
+  validate(file)
   // Quitar el foco del input para evitar scroll automático
   setTimeout(() => {
     try {
@@ -315,6 +390,7 @@ function clearImage() {
   selectedImage.value = null
   imageUrl.value = props.initialImageUrl || null
   emit('update:modelValue', null)
+  validate(null)
 }
 
 function generateUniqueId() {
@@ -329,13 +405,24 @@ function isImage(nameOrUrl: string) {
     lower.startsWith('http') ||
     lower.endsWith('.png') ||
     lower.endsWith('.jpg') ||
-    lower.endsWith('.jpeg')
+    lower.endsWith('.jpeg') ||
+    lower.endsWith('.gif')
   )
 }
 
 function setImageFromProps() {
   if (props.initialImageUrl && isImage(props.initialImageUrl)) {
     imageUrl.value = props.initialImageUrl
+  }
+
+  if (props.modelValue) {
+    if (props.modelValue instanceof File) {
+      if (isImage(props.modelValue.name) || props.modelValue.type.startsWith('image/')) {
+        readFile(props.modelValue)
+      }
+    } else if (typeof props.modelValue === 'string') {
+      imageUrl.value = props.modelValue
+    }
   }
 }
 
@@ -394,13 +481,14 @@ function handlePaste(event: ClipboardEvent) {
       return
     }
     emit('update:modelValue', file)
+    validate(file)
   } catch (e) {
     console.error('Error en manejo de pegado:', e)
   }
 }
 
 function broadcastActive(id: string) {
-  window.dispatchEvent(new CustomEvent('quic-image-uploader-active', { detail: { id } }))
+  window.dispatchEvent(new CustomEvent('fsi-image-uploader-active', { detail: { id } }))
 }
 
 function handleActiveBroadcast(e: Event) {
@@ -412,6 +500,7 @@ function handleActiveBroadcast(e: Event) {
 
 function onFocus() {
   setActivePasteTarget()
+  validate(props.modelValue)
 }
 
 function onBlur() {
@@ -419,6 +508,7 @@ function onBlur() {
   if (props.pasteBehavior !== 'global-active') {
     isActive.value = false
   }
+  validate(props.modelValue)
 }
 </script>
 
@@ -487,6 +577,84 @@ function onBlur() {
   outline-offset: 4px;
   border-radius: 16px;
 }
+
+/* BaseInput error styles */
+.invalid-feedback {
+  font-size: 0.95em;
+  color: #dc3545;
+}
+
+.errors-wrapper {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.errors-wrapper-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.errors-container {
+  max-height: 3.2em;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: #fca5a5 #f9fafb;
+  padding-right: 4px;
+}
+
+.errors-container::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 6px;
+}
+.errors-container::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 4px;
+}
+.errors-container::-webkit-scrollbar-thumb {
+  background-color: #fca5a5;
+  border-radius: 4px;
+  border: 1px solid #f9fafb;
+}
+
+.error-item {
+  line-height: 1.4em;
+  margin-bottom: 4px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  overflow: hidden;
+  max-height: 5em;
+}
+.error-item:last-child {
+  margin-bottom: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+  grid-template-rows: 0fr;
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+  max-height: 0;
+  margin-bottom: 0;
+}
 </style>
 
 <!--
@@ -497,8 +665,9 @@ Props disponibles:
 - round: boolean (si es true, imagen circular; si es false, rectangular)
 - initialImageUrl: string | null (URL de imagen inicial, opcional)
 - inputDisabled: boolean (si es true, solo vista previa, no permite subir)
-- acceptedFormats: string (formatos aceptados, por defecto: 'image/png, image/jpeg, image/jpg')
-- maxSizeMB: number (tamaño máximo en MB, por defecto: 3)
+- acceptedFormats: string (formatos aceptados, por defecto: 'image/png, image/jpeg, image/jpg, image/gif')
+- maxSizeMB: number (tamaño máximo en MB, por defecto: 1.5)
+- rules: Array<(val: any) => string | boolean> (reglas de validación, opcional)
 
 Eventos:
 - @update:modelValue="(file: File | null) => void" // Se emite cuando el usuario selecciona o borra una imagen
@@ -522,7 +691,7 @@ Ejemplo con formatos personalizados (PDF, documentos):
 Ejemplo aceptando imágenes y PDFs:
 <ImageUploader
   v-model="selectedFile"
-  accepted-formats="image/png, image/jpeg, image/jpg, application/pdf"
+  accepted-formats="image/png, image/jpeg, image/jpg, image/gif, application/pdf"
   :max-size-m-b="5"
 />
 

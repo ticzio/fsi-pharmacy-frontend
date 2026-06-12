@@ -4,14 +4,10 @@ import { getRoleIdFromCookie } from '@/composables/useAccessControl'
 import { roleHasAllPermissions } from '@/const/rolePermissions'
 
 import dashboardRoutes from './routes/dashboard'
-import pharmacyRoutes from './routes/pharmacy'
-import couponsRoutes from './routes/coupons'
-import newsRoutes from './routes/news'
-import notificationsRoutes from './routes/notifications'
-import usersRoutes from './routes/users'
-import operatorsRoutes from './routes/operators'
-import administratorsRoutes from './routes/administrators'
-import settingsRoutes from './routes/settings'
+import couponsRoutes from './routes/exchanges'
+import chatsRoutes from './routes/chats'
+import couponsListRoutes from './routes/coupons'
+import historicalRoutes from './routes/historical'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,14 +23,16 @@ const router = createRouter({
       meta: { requiresGuest: true },
     },
     ...dashboardRoutes,
-    ...pharmacyRoutes,
     ...couponsRoutes,
-    ...newsRoutes,
-    ...notificationsRoutes,
-    ...usersRoutes,
-    ...operatorsRoutes,
-    ...administratorsRoutes,
-    ...settingsRoutes,
+    ...chatsRoutes,
+    ...couponsListRoutes,
+    ...historicalRoutes,
+    {
+      path: '/profile',
+      name: 'profile-edit',
+      component: () => import('../views/profile/Edit.vue'),
+      meta: { requiresAuth: true },
+    },
     // Catch-all 404 route (must be last)
     {
       path: '/:pathMatch(.*)*',
@@ -43,6 +41,22 @@ const router = createRouter({
       meta: { requiresGuest: false, requiresAuth: false },
     },
   ],
+})
+
+router.onError((error, to) => {
+  const isChunkLoadError =
+    error instanceof TypeError ||
+    error.name === 'ChunkLoadError' ||
+    /Loading chunk|Failed to fetch dynamically imported module/i.test(error.message)
+
+  if (isChunkLoadError) {
+    // Avoid infinite reload loops: track if we already reloaded for this path
+    const reloadedKey = `chunk_reload_${to.fullPath}`
+    if (!sessionStorage.getItem(reloadedKey)) {
+      sessionStorage.setItem(reloadedKey, '1')
+      window.location.href = to.fullPath
+    }
+  }
 })
 
 /* Navigation guards

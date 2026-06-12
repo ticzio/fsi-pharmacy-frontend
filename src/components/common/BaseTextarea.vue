@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useFormValidation } from '@/composables/useFormValidation'
 
 interface Props {
   modelValue: string | number
@@ -7,6 +8,7 @@ interface Props {
   id: string
   placeholder?: string
   disabled?: boolean
+  autocomplete?: string
   rows?: number | string
   rules?: Array<(val: any) => string | boolean>
   resize?: 'none' | 'both' | 'horizontal' | 'vertical'
@@ -16,6 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
   label: '',
   placeholder: '',
   disabled: false,
+  autocomplete: 'off',
   rows: 3,
   rules: () => [],
   resize: 'none',
@@ -24,6 +27,22 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits(['update:modelValue'])
 
 const internalErrors = ref<string[]>([])
+const validationContext = useFormValidation()
+
+onMounted(() => {
+  validationContext?.registerField(props.id, internalErrors.value.length > 0)
+})
+
+onUnmounted(() => {
+  validationContext?.unregisterField(props.id)
+})
+
+watch(
+  () => internalErrors.value.length,
+  (newCount) => {
+    validationContext?.updateFieldStatus(props.id, newCount > 0)
+  },
+)
 
 const validate = (value: any) => {
   if (!props.rules || props.rules.length === 0) {
@@ -81,6 +100,7 @@ const handleBlur = (event: Event) => {
         :value="modelValue"
         :placeholder="placeholder"
         :disabled="disabled"
+        :autocomplete="autocomplete"
         :rows="rows"
         :style="{ resize: resize }"
         @input="handleInput"
@@ -106,11 +126,11 @@ const handleBlur = (event: Event) => {
 
 <style scoped>
 .form-group-custom label {
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .custom-textarea {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   padding: 0.8rem 1.2rem;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -121,7 +141,7 @@ const handleBlur = (event: Event) => {
 
 .custom-textarea::placeholder {
   color: #6b7280;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
 }
 
 .custom-textarea:focus {

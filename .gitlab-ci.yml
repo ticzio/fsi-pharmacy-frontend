@@ -19,11 +19,11 @@ build_vue_app:
     - echo "Iniciando etapa de construcción de la aplicación en Docker..."
     - echo "  -> Instalando dependencias de Node.js (npm ci para builds limpios)..."
     - npm ci # 'npm ci' es preferible a 'npm install' en CI para builds reproducible.
-             # Asegúrate de que tienes un 'package-lock.json' en tu repositorio.
+      # Asegúrate de que tienes un 'package-lock.json' en tu repositorio.
     - echo "  -> Compilando la aplicación Vue.js (npm run build)..."
     - npm run build # Este comando genera tu carpeta 'dist'
     - echo "Construcción completada. Archivos generados en la carpeta 'dist/'."
-  
+
   artifacts:
     paths:
       - dist/ # Guarda la carpeta 'dist' como un artefacto. Esto la hace disponible para jobs posteriores.
@@ -56,7 +56,7 @@ deploy_develop_to_vps2021_vps:
     # Usamos el alias SSH definido en /home/gitlab-runner/.ssh/config
     - export SSH_CMD="ssh deploy_vps2021"
     # Define la ruta absoluta del proyecto en el servidor para el entorno DEVELOP.
-    - export PROJECT_PATH="/var/www/TESTING/QUIC/quic-admin-frontend"
+    - export PROJECT_PATH="/var/www/TESTING/fsi/fsi-admin-frontend"
 
     # Los comandos siguientes se ejecutan *en el servidor remoto* como 'deployuser'.
 
@@ -86,7 +86,7 @@ deploy_develop_to_vps2021_vps:
     # --- INICIO DE LA LÓGICA DE GIT PULL/RESET MEJORADA ---
     # Asegurar que la URL remota de 'origin' es SSH para el deployuser
     - echo "  -> Configurando URL remota de Git a SSH para deployuser..."
-    - $SSH_CMD "cd \"${PROJECT_PATH}\" && git remote set-url origin git@gitlab.com:ticktapsoftware/quic/quic-admin-frontend.git"
+    - $SSH_CMD "cd \"${PROJECT_PATH}\" && git remote set-url origin git@gitlab.com:ticktapsoftware/fsi/fsi-admin-frontend.git"
 
     # Primero, asegúrate de que el repositorio local esté limpio y actualizado con el remoto.
     - echo "  -> Actualizando información de ramas remotas..."
@@ -151,7 +151,7 @@ deploy_calidad_to_vps2021_vps:
     - echo "Iniciando comandos de despliegue remotos en VPS2021 VPS para CALIDAD..."
     - export SSH_CMD="ssh deploy_vps2021"
     # Define la ruta absoluta del proyecto en el servidor para el entorno CALIDAD.
-    - export PROJECT_PATH="/var/www/CALIDAD/QUIC/quic-admin-frontend"
+    - export PROJECT_PATH="/var/www/CALIDAD/fsi/fsi-admin-frontend"
 
     # Asegurar la propiedad y permisos del directorio del proyecto para deployuser
     # ESTOS COMANDOS ASUMEN QUE EL 'deployuser' YA ES EL PROPIETARIO DE ${PROJECT_PATH}
@@ -178,7 +178,7 @@ deploy_calidad_to_vps2021_vps:
     # --- LÓGICA DE GIT PULL/RESET MEJORADA PARA CALIDAD ---
     # Asegurar que la URL remota de 'origin' es SSH para el deployuser
     - echo "  -> Configurando URL remota de Git a SSH para deployuser..."
-    - $SSH_CMD "cd \"${PROJECT_PATH}\" && git remote set-url origin git@gitlab.com:ticktapsoftware/quic/quic-admin-frontend.git"
+    - $SSH_CMD "cd \"${PROJECT_PATH}\" && git remote set-url origin git@gitlab.com:ticktapsoftware/fsi/fsi-admin-frontend.git"
 
     - echo "  -> Actualizando información de ramas remotas para CALIDAD..."
     - $SSH_CMD "cd \"${PROJECT_PATH}\" && git fetch origin calidad"

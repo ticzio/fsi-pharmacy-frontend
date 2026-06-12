@@ -19,6 +19,7 @@ const props = defineProps<{
         :round="true"
         placeholder="Haz click o arrastra una imagen"
         accepted-formats="image/png, image/jpeg, image/jpg"
+        :rules="[(v) => !!v || 'La imagen es obligatoria']"
       />
     </div>
 
@@ -59,22 +60,10 @@ const props = defineProps<{
             v-model="form.phone"
             label="Teléfono"
             placeholder="Ej. 04141234567"
+            :rules="[(v) => !!v || 'El teléfono es obligatorio']"
           />
         </div>
-        <div class="col-12 col-md-12">
-          <MultiselectCustom
-            v-model="form.role_id"
-            :options="roleOptions"
-            label="Rol del Operador *"
-            placeholder="Selecciona el rol"
-            labelKey="name"
-            trackBy="id"
-            :showIcons="true"
-            helperType="custom"
-            customDefaultIcon="bi bi-person-badge"
-            :clearable="true"
-          />
-        </div>
+
         <!-- Contraseñas: Usamos autoComplete 'new-password' recomendado en las conversaciones previas para prevenir autocompletado en esta app -->
         <div class="col-12 col-md-6">
           <BaseInput

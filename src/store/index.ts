@@ -47,9 +47,11 @@ const store = createStore({
      *   // Retorna una promesa con los datos
      */
     getData({ commit }: { commit: Function }, form: { url: string; params?: Record<string, any> }) {
+      const isAbsolute = form.url.startsWith('http')
+      const finalUrl = isAbsolute ? form.url : '/' + form.url
       return new Promise((resolve, reject) => {
         apiClient
-          .get('/' + form.url, {
+          .get(finalUrl, {
             params: { active: 1, ...(form.params || {}) },
           })
           .then((response) => resolve(response.data))
@@ -70,12 +72,6 @@ const store = createStore({
           .catch((error) => reject(error?.response?.data || error))
       })
     },
-    /**
-     * updateData
-     * Uso:
-     *   this.$store.dispatch('updateData', { url: 'ruta', id: 123, data: { ... } })
-     *   // Retorna una promesa con la respuesta
-     */
     updateData(
       { commit }: { commit: Function },
       form: { url: string; id: string | number; data: any },
@@ -83,6 +79,20 @@ const store = createStore({
       return new Promise((resolve, reject) => {
         apiClient
           .put('/' + form.url + '/' + form.id, form.data)
+          .then((response) => resolve(response.data))
+          .catch((error) => reject(error?.response?.data || error))
+      })
+    },
+    /**
+     * updateDataNoId
+     * Uso:
+     *   this.$store.dispatch('updateDataNoId', { url: 'ruta', data: { ... } })
+     *   // Retorna una promesa con la respuesta sin concatenar ID al final
+     */
+    updateDataNoId({ commit }: { commit: Function }, form: { url: string; data: any }) {
+      return new Promise((resolve, reject) => {
+        apiClient
+          .put('/' + form.url, form.data)
           .then((response) => resolve(response.data))
           .catch((error) => reject(error?.response?.data || error))
       })
@@ -112,7 +122,7 @@ const store = createStore({
       // El primer argumento es el contexto de Vuex, lo desestructuramos para obtener 'commit'
       { commit }: { commit: Function },
       // El segundo argumento AHORA es el objeto payload. Lo desestructuramos también.
-      { url, credentials }: { url: string; credentials: { email: string; password: string } },
+      { url, credentials }: { url: string; credentials: { email: string; password: string; turnstile_token?: string } },
     ) {
       const { resetAuthRole } = useAuth()
       const { setCookie } = useCookies()
@@ -124,19 +134,26 @@ const store = createStore({
           })
           .then((response) => {
             if (response.data.code === 200) {
-              setCookie('changan_admin_token', response.data.auth.token)
-              setCookie('changan_admin_full_name', response.data.full_name)
-              const id_role_hashing = btoa(response.data.id_role.toString())
-              setCookie('changan_admin_id_role', id_role_hashing)
-              setCookie('changan_admin_id_admin', response.data.id_admin)
-              if (response.data.url_image) {
-                setCookie('changan_admin_url_image', response.data.url_image)
+              const userData = response.data.data
+              setCookie('fsi_pharmacy_token', userData.auth.token)
+              setCookie('fsi_pharmacy_full_name', userData.full_name)
+              setCookie('fsi_pharmacy_id_user', userData.id)
+              setCookie('fsi_pharmacy_code_user', userData.code)
+              setCookie('fsi_pharmacy_id_pharmacy', userData.type_pharmacy.id_pharmacy)
+              setCookie('fsi_pharmacy_name_pharmacy', userData.type_pharmacy.name)
+              setCookie('fsi_pharmacy_code_pharmacy', userData.type_pharmacy.code_pharmacy)
+              const id_role_hashing = btoa(userData.id_type_rol_user.toString())
+              setCookie('fsi_pharmacy_id_role', id_role_hashing)
+
+              //setCookie('fsi_pharmacy_id_admin', userData.id_admin)
+              if (userData.url_image) {
+                setCookie('fsi_pharmacy_url_image', userData.url_image)
               }
-              commit('SET_USER', response.data)
+              commit('SET_USER', userData)
               resetAuthRole()
               resolve(response.data)
             } else {
-              reject(new Error(response.data.message || 'Error al iniciar sesión'))
+              reject(response.data)
             }
           })
           .catch((error) => {
@@ -149,11 +166,16 @@ const store = createStore({
       const { resetAuthRole } = useAuth()
       const { removeCookie } = useCookies()
 
-      removeCookie('changan_admin_token')
-      removeCookie('changan_admin_full_name')
-      removeCookie('changan_admin_id_role')
-      removeCookie('changan_admin_id_admin')
-      removeCookie('changan_admin_url_image')
+      removeCookie('fsi_pharmacy_token')
+      removeCookie('fsi_pharmacy_full_name')
+      removeCookie('fsi_pharmacy_id_role')
+      removeCookie('fsi_pharmacy_id_admin')
+      removeCookie('fsi_pharmacy_url_image')
+      removeCookie('fsi_pharmacy_code_user')
+      removeCookie('fsi_pharmacy_id_user')
+      removeCookie('fsi_pharmacy_name_pharmacy')
+      removeCookie('fsi_pharmacy_code_pharmacy')
+      removeCookie('fsi_pharmacy_id_pharmacy')
 
       resetAuthRole()
 

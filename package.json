@@ -1,6 +1,6 @@
 {
   "name": "fsi-pharmacy-frontend",
-  "version": "0.0.2",
+  "version": "0.2.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,11 +13,13 @@
     "test": "echo 'No hay pruebas definidas. Pasando...' && exit 0"
   },
   "dependencies": {
+    "@sentry/vue": "^10.56.0",
     "@vueup/vue-quill": "^1.2.0",
     "apexcharts": "^5.10.1",
     "axios": "^1.10.0",
     "bootstrap": "^5.3.7",
     "bootstrap-icons": "^1.13.1",
+    "crypto-js": "^4.2.0",
     "intl-tel-input": "^25.3.1",
     "js-cookie": "^3.0.5",
     "moment": "^2.30.1",
@@ -28,12 +30,14 @@
     "vue-multiselect": "^3.2.0",
     "vue-router": "^4.5.0",
     "vue-sweetalert2": "^5.0.11",
+    "vue-turnstile": "^1.0.11",
     "vue3-apexcharts": "^1.11.1",
     "vuex": "^4.1.0"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.1",
     "@types/bootstrap": "^5.2.10",
+    "@types/crypto-js": "^4.2.2",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^22.14.0",
     "@types/qrcode": "^1.5.6",

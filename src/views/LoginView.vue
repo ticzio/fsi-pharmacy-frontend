@@ -3,18 +3,16 @@ import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { useSwal } from '@/composables/useSwal'
-import { useSwalToast } from '@/composables/useSwalToast'
-import { ERROR } from '@/const/errorConst'
+import { useHandleError } from '@/composables/useHandleError'
 import { getEnvironmentAlert } from '@/services/initApi'
 import packageJson from '../../package.json'
 import { normalizeEmail } from '@/utils/funcEmails'
-import { getPasswordErrors } from '@/utils/funcPassword'
 import LoginForm from '@/components/Login/LoginForm.vue'
 
 const APP_VERSION = packageJson.version
 const showNetworkError = ref(false)
 const swal = useSwal()
-const swalToast = useSwalToast()
+const { handleErrorResponse } = useHandleError()
 const store = useStore()
 const router = useRouter()
 const loading = ref(false)
@@ -22,35 +20,30 @@ const loading = ref(false)
 const handleLogin = async (credentialsPayload: any) => {
   const email = normalizeEmail(credentialsPayload.email)
   const password = credentialsPayload.password
+  const turnstile_token = credentialsPayload.turnstileToken
 
   if (!email || !password) {
-    swalToast.showError('Por favor, completa todos los campos')
+    handleErrorResponse({ alert: 'Por favor, completa todos los campos' }, 'Por favor, completa todos los campos')
     return
   }
 
   loading.value = true
   try {
     const response = await store.dispatch('login', {
-      url: '/auth/admin/login',
-      credentials: { email, password },
+      url: '/auth/login/pharmacy',
+      credentials: { email, password, turnstile_token },
     })
 
-    if (response.code === 200) {
-      swal.showSuccess('Inicio de sesión exitoso')
-      router.push('/dashboard')
+    if (response.code == 200) {
+      await swal.showSuccess('Inicio de sesión exitoso')
+      console.log('Redirigiendo a dashboard...')
+      router.push('/dashboard').catch((err) => {
+        console.error('Error en la navegación:', err)
+      })
     }
   } catch (error: any) {
     console.error('Error al iniciar sesión:', error)
-
-    if (error?.code === 401 && error?.failed_attempts !== undefined) {
-      swal.showConfirm(error.alert, `Intentos fallidos: ${error.failed_attempts}`, {
-        icon: 'error',
-        showCancelButton: false,
-        confirmButtonText: 'Entendido',
-      })
-    } else {
-      swalToast.showError(ERROR.errorLogin)
-    }
+    handleErrorResponse(error, 'Error al iniciar sesión. Intenta de nuevo.')
   } finally {
     loading.value = false
   }
@@ -107,7 +100,7 @@ onMounted(() => {
   background-position: center;
   background-repeat: no-repeat;
   background-color: transparent;
-  min-height: 100vh;
+  min-height: var(--app-vh);
   width: 100%;
 }
 

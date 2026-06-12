@@ -1,4 +1,4 @@
-# QUIC Admin Frontend — Copilot Instructions
+# fsi Admin Frontend — Copilot Instructions
 
 ## Arquitectura y Componentes Clave
 

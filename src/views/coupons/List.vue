@@ -1,110 +1,81 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import titleSection from '@/components/common/titleSection.vue'
 import CustomTable from '@/components/common/CustomTable.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import FetchButton from '@/components/common/FetchButton.vue'
-import RedirectButton from '@/components/common/RedirectButton.vue'
 import Modal from '@/components/common/Modal.vue'
 import CouponForm from '@/components/Coupons/CouponForm.vue'
+import AppImage from '@/components/common/AppImage.vue'
 
 //Composables
-import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { useSwalToast } from '@/composables/useSwalToast'
-import { useTableActions } from '@/composables/useTableActions'
+import { useCoupons } from '@/composables/Models/useCoupons'
 
-import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_PAGINATION } from '@/const/tableConst'
-import { BUTTONS_TOOLTIPS } from '@/const/buttonConst'
+import { TITLE_SECTION_COMPONENT, TABLE_HEADERS, TABLE_ACTIONS } from '@/const/tableConst'
 
 interface Item {
   id: string | number
   [key: string]: any
 }
 
-const router = useRouter()
-const swalToast = useSwalToast()
 const store = useStore()
 const isMobile = computed(() => store.getters.isMobile)
-const { getDefaultActions } = useTableActions()
 
-const loading = ref(false)
-const items = ref<Item[]>([
-  {
-    id: 1,
-    code: 'CUP-001',
-    name: 'Descuento 10%',
-    description: 'Cupón de descuento del 10%',
-    id_level: 1,
-    url_img: 'https://via.placeholder.com/150',
-    start_date: '2026-01-01',
-    finish_date: '2026-12-31',
-    timestamp: '2026-01-01T12:00:00Z',
-    active: true,
-  },
-  {
-    id: 2,
-    code: 'CUP-002',
-    name: 'Descuento 20%',
-    description: 'Cupón de descuento del 20%',
-    id_level: 2,
-    url_img: 'https://via.placeholder.com/150',
-    start_date: '2026-06-01',
-    finish_date: '2026-06-30',
-    timestamp: '2026-06-01T12:00:00Z',
-    active: false,
-  },
-])
+const {
+  loading,
+  coupons,
+  pagination,
+  getDataCoupons,
+  deactivateCoupon,
+  deleteCoupon,
+  paginationKey,
+} = useCoupons()
+
 const search = ref('')
-
-const paginationKey = 'coupons-list'
-const pagination = reactive({
-  currentPage: TABLE_PAGINATION.currentPage,
-  totalPages: TABLE_PAGINATION.totalPages,
-  limit: TABLE_PAGINATION.limit,
-})
 
 const couponModalDialog = ref<InstanceType<typeof Modal> | null>(null)
 const selectedCoupon = ref<Item | null>(null)
-const isModalReadOnly = ref(true) // Start read-only when viewing
+const isModalReadOnly = ref(true)
 
-const handleTableAction = ({ actionName, item }: { actionName: string; item: Item }) => {
-  if (actionName === 'edit' || actionName === 'view') {
-    // Support generic view or edit
+const handleTableAction = async ({ actionName, item }: { actionName: string; item: Item }) => {
+  if (actionName === 'view' || actionName === 'edit') {
     selectedCoupon.value = { ...item }
     isModalReadOnly.value = actionName === 'view'
     couponModalDialog.value?.openModal()
-  } else if (actionName === 'edit') {
-    // Optional: router.push(`/coupons/edit/${item.id}`) if a different flow exists.
-    // Using modal for now
+  } else if (actionName === 'deactivate') {
+    await deactivateCoupon(item)
+  } else if (actionName === 'delete') {
+    await deleteCoupon(item)
   }
 }
 
-const getTableActions = async (item: any) => {
-  return getDefaultActions(item)
+const getTableActions = async () => {
+  return [TABLE_ACTIONS.edit]
 }
 
 const handleTablePagination = (page: number) => {
-  pagination.currentPage = page
+  getDataCoupons(page, search.value)
   store.dispatch('pagination/updatePagination', {
     key: paginationKey,
     currentPage: page,
   })
 }
 
-const goToNew = () => {
-  router.push({ name: 'Nuevo Cupón' })
+const fetchData = () => {
+  getDataCoupons(1, search.value)
 }
 
-const fetchData = () => {
-  // TODO: Lógica para hacer la petición GET
+const refreshData = () => {
   search.value = ''
+  fetchData()
 }
 
 onMounted(() => {
   const savedPageGetter = store.getters['pagination/getPage']
-  pagination.currentPage = savedPageGetter(paginationKey)
+  const savedPage = savedPageGetter(paginationKey) || 1
+  getDataCoupons(savedPage, search.value)
 })
 </script>
 
@@ -125,6 +96,7 @@ onMounted(() => {
             label="Buscar por:"
             placeholder="Código o nombre del cupón"
             :loading="loading"
+            @keyup.enter="fetchData"
             :infoTexts="['Puedes buscar por código', 'Puedes buscar por nombre del cupón']"
           />
         </div>
@@ -132,12 +104,7 @@ onMounted(() => {
         <div
           class="col-12 col-md d-flex flex-md-row gap-2 align-items-stretch align-items-md-end justify-content-md-end mt-1 mt-md-0"
         >
-          <FetchButton @fetch="fetchData" />
-          <!--  <RedirectButton
-            :tooltip-title="BUTTONS_TOOLTIPS.concessionaire.tooltipTitle"
-            @redirect="goToNew"
-          />
-           -->
+          <FetchButton @fetch="refreshData" :loading="loading" />
         </div>
       </div>
 
@@ -148,7 +115,7 @@ onMounted(() => {
         }"
       >
         <CustomTable
-          :data="items"
+          :data="coupons"
           :headers="TABLE_HEADERS.coupons"
           :actions="getTableActions"
           :is-loading="loading"
@@ -158,17 +125,30 @@ onMounted(() => {
           :change-page="handleTablePagination"
           @change-page="handleTablePagination"
           @action-click="handleTableAction"
-        />
+        >
+          <template #cell(url_image)="{ value }">
+            <AppImage :src="value" :alt="'Imagen del cupón'" />
+          </template>
+          <template #cell(start_date)="{ value }">
+            <span v-format-date="value"></span>
+          </template>
+          <template #cell(finish_date)="{ value }">
+            <span v-format-date="value"></span>
+          </template>
+          <template #cell(created_at)="{ value }">
+            <span v-format-date-time="value"></span>
+          </template>
+        </CustomTable>
       </div>
 
       <!-- Modal Detalles de Cupón -->
       <Modal
         id="couponDetailsModal"
         ref="couponModalDialog"
-        :title="'Detalles del Cupón'"
+        :title="TITLE_SECTION_COMPONENT.coupons.details"
         size="lg"
       >
-        <CouponForm :initial-data="selectedCoupon" :readOnly="isModalReadOnly" />
+        <CouponForm :initial-data="selectedCoupon" :read-only="isModalReadOnly" />
       </Modal>
     </div>
   </DashboardLayout>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useFormValidation } from '@/composables/useFormValidation'
 
 interface Props {
   modelValue: string | number
@@ -8,6 +9,7 @@ interface Props {
   id: string
   placeholder?: string
   disabled?: boolean
+  autocomplete?: string
   rules?: Array<(val: any) => string | boolean>
 }
 
@@ -16,6 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
   label: '',
   placeholder: '',
   disabled: false,
+  autocomplete: 'off',
   rules: () => [],
 })
 
@@ -23,6 +26,22 @@ const emit = defineEmits(['update:modelValue'])
 
 const internalErrors = ref<string[]>([])
 const isPasswordVisible = ref(false)
+const validationContext = useFormValidation()
+
+onMounted(() => {
+  validationContext?.registerField(props.id, internalErrors.value.length > 0)
+})
+
+onUnmounted(() => {
+  validationContext?.unregisterField(props.id)
+})
+
+watch(
+  () => internalErrors.value.length,
+  (newCount) => {
+    validationContext?.updateFieldStatus(props.id, newCount > 0)
+  },
+)
 
 const inputType = computed(() => {
   if (props.type === 'password') {
@@ -95,6 +114,7 @@ const togglePasswordVisibility = () => {
         :value="modelValue"
         :placeholder="placeholder"
         :disabled="disabled"
+        :autocomplete="autocomplete"
         @input="handleInput"
         @blur="handleBlur"
       />
@@ -137,11 +157,11 @@ const togglePasswordVisibility = () => {
 
 <style scoped>
 .form-group-custom label {
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .custom-input {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   padding: 0.8rem 1.2rem;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -152,7 +172,7 @@ const togglePasswordVisibility = () => {
 
 .custom-input::placeholder {
   color: #6b7280;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
 }
 
 .custom-input:focus {

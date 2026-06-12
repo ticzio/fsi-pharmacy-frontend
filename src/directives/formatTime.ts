@@ -20,14 +20,14 @@ const parseTime = (time: string | null | undefined, local = false): string => {
     return moment(time, ['HH:mm:ss', 'HH:mm']).format('hh:mm a')
   }
 
-  // Si viene como datetime completo (YYYY-MM-DD HH:mm:ss)
+  // Si viene como datetime completo (YYYY-MM-DD HH:mm:ss o YYYY/MM/DD HH:mm:ss)
   if (local) {
     // Modo local: el backend ya devuelve la hora en zona local, no convertir
-    return moment(time, 'YYYY-MM-DD HH:mm:ss').format('hh:mm a')
+    return moment(time, ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss']).format('hh:mm a')
   }
 
   // Modo UTC (default): convertir de UTC a hora local del navegador
-  return moment.utc(time, 'YYYY-MM-DD HH:mm:ss').local().format('hh:mm a')
+  return moment.utc(time, ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss']).local().format('hh:mm a')
 }
 
 export const formatTime: Directive<HTMLElement, string> = {

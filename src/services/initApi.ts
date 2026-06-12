@@ -26,13 +26,14 @@ export function getEnvironmentAlert() {
   return env
 }
 
+export const API_VERSION = '1.0'
 export async function InitializeConfig() {
   try {
     if (urlDomain.includes('localhost:517') || urlDomain.includes('localhost:417')) {
       configUrl = import.meta.env.VITE_API_PATH_DEVELOP
     } else if (
-      urlDomain.includes('dashtest.michangan.com') ||
-      urlDomain.includes(import.meta.env.VITE_DOMAIN_DEVELOP)
+      urlDomain.includes('farmatest.redfsi.net') ||
+      (import.meta.env.VITE_DOMAIN_DEVELOP && urlDomain.includes(import.meta.env.VITE_DOMAIN_DEVELOP))
     ) {
       configUrl = import.meta.env.VITE_API_PATH_DEVELOP
       detectedEnvironment = {
@@ -41,8 +42,8 @@ export async function InitializeConfig() {
         message: 'Estás en un ambiente de desarrollo (servidor de pruebas).',
       }
     } else if (
-      urlDomain.includes(import.meta.env.VITE_DOMAIN) ||
-      urlDomain.includes('dashmin.michangan.com')
+      (import.meta.env.VITE_DOMAIN && urlDomain.includes(import.meta.env.VITE_DOMAIN)) ||
+      urlDomain.includes('farmacia.redfsi.net')
     ) {
       configUrl = import.meta.env.VITE_API_PATH
     } else {
@@ -51,7 +52,7 @@ export async function InitializeConfig() {
 
     const response = await axios.get(configUrl)
     if (response.status === 200) {
-      configUrl = `${configUrl}api/1.0`
+      configUrl = `${configUrl}api/${API_VERSION}`
       isApiConnected = true
       console.log(
         `Conectado con el backend.\n${configUrl}\n%cRespuesta: ${JSON.stringify(response.data)}`,
@@ -60,21 +61,21 @@ export async function InitializeConfig() {
     } else {
       isApiConnected = false
       throw new Error(
-        `[CHANGAN] No se pudo establecer conexión con el backend. Respuesta HTTP: ${JSON.stringify(
+        `[FSI] No se pudo establecer conexión con el backend. Respuesta HTTP: ${JSON.stringify(
           response.data,
         )}`,
       )
     }
   } catch (error) {
     isApiConnected = false
-    console.error('[CHANGAN] Error de inicialización de API:', error)
+    console.error('[FSI] Error de inicialización de API:', error)
   }
 }
 
 export function API_PATH(): string {
   if (!configUrl) {
     const error = new Error('API no Inicializada.')
-    console.error('[CHANGAN] Error de inicialización de API:', error)
+    console.error('[FSI] Error de inicialización de API:', error)
     throw error
   }
   return configUrl

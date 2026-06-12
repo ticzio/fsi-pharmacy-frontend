@@ -1,23 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { useSwal } from '@/composables/useSwal'
 
 import { MENU_ITEMS, isMenuItemActive } from '@/const/menuItems'
 import type { MenuItem } from '@/const/menuItems'
-import { useCookies } from '@/composables/useCookies'
+
 import defaultAvatar from '@/assets/images/default-profile.png'
+import fsiLogo from '@/assets/images/login/login_logo_FSI.png'
+import ticzLogo from '@/assets/ticz.png'
 
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
 const swal = useSwal()
 
-const { getCookie } = useCookies()
-const CookiesFullName = getCookie('changan_admin_full_name') || 'Usuario'
-const CookiesEmail = getCookie('changan_admin_email') || 'Administrador'
-const CookiesUrlImage = getCookie('changan_admin_url_image')
+const currentUser = computed(() => store.getters.currentUser)
+const CookiesFullName = computed(() => currentUser.value?.full_name || 'Usuario')
+const CookiesEmail = computed(() => currentUser.value?.email || 'Administrador')
+const CookiesUrlImage = computed(() => currentUser.value?.url_image || '')
 
 // Helper para verificar si un item está activo
 const isItemActive = (item: MenuItem): boolean => {
@@ -126,12 +128,17 @@ const handleLogout = async () => {
 
         <!-- Footer Logo / Text -->
         <div class="mt-auto px-4 py-4 text-start">
-          <div class="d-flex align-items-center justify-content-start gap-2">
-            <div class="ticz-icon"></div>
+          <a
+            href="https://ticz.io/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="d-flex align-items-center justify-content-start gap-2 text-decoration-none"
+          >
+            <img :src="ticzLogo" alt="Ticz Logo" width="20" height="20" class="object-fit-contain" />
             <span class="text-white fw-medium" style="font-size: 0.75rem"
               >Desarrollado por Ticz</span
             >
-          </div>
+          </a>
         </div>
       </div>
     </aside>
@@ -152,6 +159,7 @@ const handleLogout = async () => {
           >
             <i class="bi-list fs-1"></i>
           </button>
+          <img :src="fsiLogo" alt="Logo FSI" class="mobile-header-logo" />
           <button
             class="btn btn-link text-decoration-none text-danger d-flex align-items-center"
             @click="handleLogout"
@@ -177,7 +185,7 @@ const handleLogout = async () => {
         </header>
 
         <!-- Page Content -->
-        <main class="content-body flex-grow-1 overflow-auto p-4 w-100">
+        <main class="content-body flex-grow-1 overflow-auto px-4 pt-1 pb-4 w-100">
           <slot></slot>
         </main>
       </div>
@@ -188,7 +196,7 @@ const handleLogout = async () => {
 <style scoped>
 .dashboard-layout {
   display: flex;
-  height: 100vh;
+  height: var(--app-vh);
   width: 100%;
   min-width: 0;
   overflow: hidden;
@@ -214,7 +222,7 @@ const handleLogout = async () => {
   position: fixed;
   left: -280px;
   top: 0;
-  height: 100vh;
+  height: var(--app-vh);
   width: 280px;
   z-index: 1102; /* Above overlay */
   background-color: #123e93; /* Same blue for mobile */
@@ -238,7 +246,7 @@ const handleLogout = async () => {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: var(--app-vh);
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
   z-index: 1100;
@@ -313,7 +321,7 @@ const handleLogout = async () => {
   flex: 1 1 0%;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: var(--app-vh);
   min-width: 0;
   transition: all 0.3s ease;
 }
@@ -346,6 +354,12 @@ const handleLogout = async () => {
 }
 .logout-btn:hover {
   color: #ef4444 !important;
+}
+
+.mobile-header-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 @media (max-width: 1024px) {
