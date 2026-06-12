@@ -32,8 +32,7 @@ export async function InitializeConfig() {
     if (urlDomain.includes('localhost:517') || urlDomain.includes('localhost:417')) {
       configUrl = import.meta.env.VITE_API_PATH_DEVELOP
     } else if (
-      urlDomain.includes('farmatest.redfsi.net') ||
-      (import.meta.env.VITE_DOMAIN_DEVELOP && urlDomain.includes(import.meta.env.VITE_DOMAIN_DEVELOP))
+      urlDomain.includes('farmatest.redfsi.net') 
     ) {
       configUrl = import.meta.env.VITE_API_PATH_DEVELOP
       detectedEnvironment = {
@@ -42,7 +41,6 @@ export async function InitializeConfig() {
         message: 'Estás en un ambiente de desarrollo (servidor de pruebas).',
       }
     } else if (
-      (import.meta.env.VITE_DOMAIN && urlDomain.includes(import.meta.env.VITE_DOMAIN)) ||
       urlDomain.includes('farmacia.redfsi.net')
     ) {
       configUrl = import.meta.env.VITE_API_PATH
