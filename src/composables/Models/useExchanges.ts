@@ -112,6 +112,43 @@ export function useExchanges() {
   }
 
   /**
+   * Obtiene la lista de canjes (exchanges) por cédula (CI) del cliente.
+   */
+  const getExchangesByClientCI = async (ci: string, page = 1, search = '') => {
+    currentSearch.value = search
+    exchanges.value = []
+    loading.value = true
+    try {
+      const response: any = await store.dispatch('getData', {
+        url: `${URLS.exchange.prefix}/client/ci/${ci}`,
+        params: {
+          page: page,
+          limit: pagination.limit,
+          query: search || null,
+          active: null,
+        },
+      })
+
+      if (response.code === 200) {
+        exchanges.value = response.data
+        pagination.totalPages = response.meta?.last_page || response.last_page
+        pagination.currentPage = response.meta?.current_page || response.current_page
+      } else {
+        swalToast.showError('Recursos no encontrados')
+        exchanges.value = []
+        pagination.totalPages = 1
+      }
+    } catch (error: any) {
+      console.error('Error fetching exchanges by client CI:', error)
+      swalToast.showError('Recursos no encontrados')
+      exchanges.value = []
+      pagination.totalPages = 1
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * Obtiene un registro específico por ID.
    */
   const getExchangeById = async (id: string | number) => {
@@ -153,7 +190,6 @@ export function useExchanges() {
 
       if (response.code === 200 || response.code === 201) {
         swal.showSuccess('Cupón canjeado correctamente')
-        await getExchanges(pagination.currentPage, currentSearch.value)
         return true
       } else {
         swalToast.showError(response.alert || 'Error al canjear el cupón')
@@ -281,6 +317,7 @@ export function useExchanges() {
     paginationKey,
     getExchanges,
     getExchangesByClientId,
+    getExchangesByClientCI,
     getExchangeById,
     saveExchange,
     deactivateExchange,

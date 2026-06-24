@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import titleSection from '@/components/common/titleSection.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
@@ -11,12 +11,6 @@ import { useSwalToast } from '@/composables/useSwalToast'
 import { useCookies } from '@/composables/useCookies'
 
 import { filterDniCharacters } from '@/utils/funcDni'
-import { TITLE_SECTION_COMPONENT } from '@/const/tableConst'
-
-interface Item {
-  id: string | number
-  [key: string]: any
-}
 
 const store = useStore()
 const swalToast = useSwalToast()
@@ -26,7 +20,7 @@ const {
   loading: exchangesLoading,
   exchanges,
   pagination,
-  getExchanges,
+  getExchangesByClientCI,
   saveExchange,
   checkCoupon,
 } = useExchanges()
@@ -76,6 +70,7 @@ const validateCoupon = async () => {
     const data = await checkCoupon(searchCode.value, searchCI.value)
     if (data && !Array.isArray(data)) {
       couponFound.value = data
+      fetchRecentActivity(searchCI.value)
     } else {
       couponFound.value = null
       // Si el backend retorna [] con código 200, el composable no muestra error, lo hacemos aquí
@@ -91,17 +86,19 @@ const validateCoupon = async () => {
 const handleUseCoupon = async () => {
   if (!couponFound.value) return
 
-  const success = await saveExchange(searchCode.value, searchCI.value)
+  const ciSnapshot = searchCI.value
+  const success = await saveExchange(searchCode.value, ciSnapshot)
   if (success) {
     couponFound.value = null
     searchCode.value = ''
     searchCI.value = ''
-    fetchRecentActivity()
   }
 }
 
-const fetchRecentActivity = () => {
-  getExchanges(1, '', idPharmacy)
+const fetchRecentActivity = (ci: string) => {
+  if (ci) {
+    getExchangesByClientCI(ci)
+  }
 }
 
 const recentExchanges = computed(() => {
@@ -112,10 +109,6 @@ const recentExchanges = computed(() => {
     return (exchanges.value as any).data
   }
   return []
-})
-
-onMounted(() => {
-  fetchRecentActivity()
 })
 </script>
 
