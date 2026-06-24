@@ -31,10 +31,7 @@ export async function InitializeConfig() {
   try {
     if (urlDomain.includes('localhost:517') || urlDomain.includes('localhost:417')) {
       configUrl = import.meta.env.VITE_API_PATH_DEVELOP
-    } else if (
-      urlDomain.includes('farmatest.redfsi.net') ||
-      (import.meta.env.VITE_DOMAIN_DEVELOP && urlDomain.includes(import.meta.env.VITE_DOMAIN_DEVELOP))
-    ) {
+    } else if (urlDomain.includes('farmatest.redfsi.net')) {
       configUrl = import.meta.env.VITE_API_PATH_DEVELOP
       detectedEnvironment = {
         type: 'development',
@@ -42,7 +39,6 @@ export async function InitializeConfig() {
         message: 'Estás en un ambiente de desarrollo (servidor de pruebas).',
       }
     } else if (
-      (import.meta.env.VITE_DOMAIN && urlDomain.includes(import.meta.env.VITE_DOMAIN)) ||
       urlDomain.includes('farmacia.redfsi.net')
     ) {
       configUrl = import.meta.env.VITE_API_PATH
@@ -52,7 +48,7 @@ export async function InitializeConfig() {
 
     const response = await axios.get(configUrl)
     if (response.status === 200) {
-      configUrl = `${configUrl}api/${API_VERSION}`
+      configUrl = `${configUrl}api/${API_VERSION}`  
       isApiConnected = true
       console.log(
         `Conectado con el backend.\n${configUrl}\n%cRespuesta: ${JSON.stringify(response.data)}`,
