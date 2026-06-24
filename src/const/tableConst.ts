@@ -149,7 +149,9 @@ export const TABLE_HEADERS = {
   exchanges: [
     ...maybeId('id'),
     { key: 'coupon_client.coupon.code', label: 'Código Cupón' },
-
+    {key: 'coupon_client.coupon.name', label: 'Nombre del Cupón'},
+    {key: 'coupon_client.client.full_name', label: 'Cliente'},
+    {key: 'coupon_client.client.ci', label: 'Cedula'},
     { key: 'id_users.full_name', label: 'Operador' },
     { key: 'exchanged_at', label: 'Fecha de Canje' },
     { key: 'created_at', label: 'Hora del canje' },
@@ -168,7 +170,7 @@ export const TABLE_HEADERS = {
     { key: 'code', label: 'Código' },
     { key: 'name', label: 'Nombre' },
     { key: 'description', label: 'Descripción' },
-    { key: 'id_level', label: 'ID Nivel' },
+    { key: 'id_levels.name', label: 'Nombre del nivel' },
     { key: 'url_image', label: 'Imagen' },
     { key: 'start_date', label: 'Fecha de inicio' },
     { key: 'finish_date', label: 'Fecha de fin' },
