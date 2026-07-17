@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useCookies } from '@/composables/useCookies'
+import { API_VERSION } from '@/services/initApi';
 import store from '@/store'
 
 export interface ExchangeByLevel {
@@ -83,8 +84,10 @@ export function usePharmacyAnalytics() {
     }
 
     try {
+      const chatBackendUrl = import.meta.env.VITE_CHAT_IFRAME_BACKEND || ''
+      const url = chatBackendUrl ? `${chatBackendUrl}/api/${API_VERSION}/analytics/pharmacy` : 'analytics/pharmacy'
       const response = (await store.dispatch('getData', {
-        url: 'https://apichattest.redfsi.net/api/1.0/analytics/pharmacy',
+        url,
         params: {
           code_pharmacy: codePharmacy,
           code_user: codeUser,
