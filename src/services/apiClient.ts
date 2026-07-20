@@ -49,7 +49,7 @@ apiClient.interceptors.response.use(
     const data = response.data
 
     // 1. Manejar respuestas con éxito HTTP (200), pero que contienen errores de lógica de negocio (ej. UNAUTHORIZED)
-    if (data && (data.status === 'UNAUTHORIZED' || data.code === 401)) {
+    if (data && (data.status === 'UNAUTHORIZED' &&  data.code === 401)) {
       await showConfirm(
         data.alert || 'Sesión Expirada',
         'Tu sesión ha finalizado. Por favor, inicia sesión de nuevo.',

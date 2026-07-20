@@ -40,6 +40,8 @@ const handleLogin = async (credentialsPayload: any) => {
       router.push('/dashboard').catch((err) => {
         console.error('Error en la navegación:', err)
       })
+    }else{
+      await swal.showError(response.alert)
     }
   } catch (error: any) {
     console.error('Error al iniciar sesión:', error)
